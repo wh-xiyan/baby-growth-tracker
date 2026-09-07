@@ -1,0 +1,13 @@
+{
+  "miniprogramRoot": "./",
+  "projectname": "baby-growth-tracker",
+  "description": "宝宝成长录",
+  "appid": "touristappid",
+  "setting": {
+    "urlCheck": true,
+    "es6": false,
+    "postcss": false,
+    "minified": false
+  },
+  "compileType": "miniprogram"
+}
