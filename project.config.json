@@ -3,6 +3,7 @@
   "projectname": "baby-growth-tracker",
   "description": "宝宝成长录",
   "appid": "wx4c2c7897998f7b83",
+  "cloudfunctionRoot": "cloud/",
   "setting": {
     "urlCheck": true,
     "es6": false,

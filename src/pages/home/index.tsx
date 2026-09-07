@@ -1,29 +1,36 @@
 import { View } from '@tarojs/components'
-import { Button } from '@nutui/nutui-react-taro'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
+import { useSessionStore } from '../../stores/session'
 import './index.scss'
+import { PageHeader, SectionCard, SectionTitle, PrimaryButton } from '../../components/common'
 
 export default function Home() {
+  const familyId = useSessionStore((state) => state.familyId)
+  const initialized = useSessionStore((state) => state.initialized)
+  useDidShow(() => {
+    if (initialized && !familyId) Taro.navigateTo({ url: '/pages/onboarding/index' })
+  })
   const addRecord = () => Taro.navigateTo({ url: '/pages/record-edit/index' })
   return (
     <View className='page home-page'>
-      <View className='page-title'>宝宝成长录</View>
-      <View className='page-subtitle'>记录每一个值得记住的今天</View>
-      <View className='section hero'>
+      <PageHeader
+        title='宝宝成长录'
+        subtitle='记录每一个值得记住的今天'
+        eyebrow='TODAY WITH LOVE'
+      />
+      <SectionCard className='hero'>
         <View className='hero-name'>宝宝档案</View>
         <View className='muted'>完成家庭和宝宝设置后，这里会显示年龄与成长概览</View>
-      </View>
-      <View className='section'>
-        <View className='section-title'>今日记录</View>
+      </SectionCard>
+      <SectionCard>
+        <SectionTitle>今日记录</SectionTitle>
         <View className='muted'>还没有记录，先记下宝宝今天的小事吧</View>
-        <Button type='primary' size='small' onClick={addRecord}>
-          新增记录
-        </Button>
-      </View>
-      <View className='section'>
-        <View className='section-title'>待办提醒</View>
+        <PrimaryButton onClick={addRecord}>记录今天</PrimaryButton>
+      </SectionCard>
+      <SectionCard>
+        <SectionTitle>待办提醒</SectionTitle>
         <View className='muted'>暂无即将到期的疫苗提醒</View>
-      </View>
+      </SectionCard>
     </View>
   )
 }

@@ -1,4 +1,12 @@
 export type FamilyRole = 'owner' | 'adult' | 'viewer'
+export interface User {
+  id: string
+  openid?: string
+  nickname: string
+  avatarUrl?: string
+  createdAt: string
+  updatedAt: string
+}
 export interface FamilyMember {
   id: string
   familyId: string
