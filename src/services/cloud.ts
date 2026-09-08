@@ -1,16 +1,12 @@
 import Taro from '@tarojs/taro'
 
 export function getCloudEnvId(): string | undefined {
-  // `process` is available during the build, but is not a runtime global in
-  // WeChat's JavaScriptCore. Keep the demo/local path usable when no env ID
-  // was injected by Taro's DefinePlugin.
-  if (typeof process === 'undefined' || !process.env) return undefined
-  return process.env.TARO_CLOUD_ENV
+  return CLOUD_ENV_ID || undefined
 }
 
 export function isCloudConfigured(): boolean {
   const envId = getCloudEnvId()
-  return Boolean(envId && envId !== 'your-cloud-environment-id')
+  return Boolean(envId)
 }
 
 export async function callCloudFunction<T>(
@@ -18,5 +14,7 @@ export async function callCloudFunction<T>(
   data?: Record<string, unknown>,
 ): Promise<T> {
   const result = await Taro.cloud.callFunction({ name, data })
-  return result.result as T
+  const payload = result.result as { ok?: boolean; data?: T }
+  if (payload?.ok === false) throw new Error('CLOUD_FUNCTION_FAILED')
+  return payload?.ok ? (payload.data as T) : (result.result as T)
 }

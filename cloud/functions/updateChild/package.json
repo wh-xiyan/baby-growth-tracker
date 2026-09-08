@@ -1,1 +1,5 @@
-{ "dependencies": { "wx-server-sdk": "3.0.3" } }
+{
+  "dependencies": {
+    "wx-server-sdk": "3.0.3"
+  }
+}

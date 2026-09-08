@@ -10,10 +10,12 @@
     "framework": "React"
   },
   "scripts": {
-    "format": "prettier --write \"src/**/*.{ts,tsx,scss}\" \"config/**/*.ts\" \"types/**/*.d.ts\" \"*.{js,json,ts}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,scss}\" \"config/**/*.ts\" \"types/**/*.d.ts\" \"*.{js,json,ts}\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,scss}\" \"cloud/**/*.{ts,js,cjs,json}\" \"config/**/*.ts\" \"types/**/*.d.ts\" \"*.{js,json,ts}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,scss}\" \"cloud/**/*.{ts,js,cjs,json}\" \"config/**/*.ts\" \"types/**/*.d.ts\" \"*.{js,json,ts}\"",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "cloud:typecheck": "pnpm --dir cloud typecheck",
+    "cloud:build": "pnpm --dir cloud build",
     "build:weapp": "taro build --type weapp",
     "build:swan": "taro build --type swan",
     "build:alipay": "taro build --type alipay",
@@ -38,7 +40,7 @@
     "Android >= 4.1",
     "ios >= 8"
   ],
-  "author": "xiyan",
+  "author": "cyan",
   "dependencies": {
     "@babel/runtime": "^7.21.5",
     "@nutui/nutui-react-taro": "^2.6.14",

@@ -11,6 +11,9 @@ declare module '*.scss'
 declare module '*.sass'
 declare module '*.styl'
 
+/** 由 Taro 的构建配置注入；微信小程序运行时不依赖 `process`。 */
+declare const CLOUD_ENV_ID: string
+
 declare namespace NodeJS {
   interface ProcessEnv {
     /** NODE 内置环境变量, 会影响到最终构建生成产物 */
@@ -23,5 +26,6 @@ declare namespace NodeJS {
      * @see https://taro-docs.jd.com/docs/next/env-mode-config#特殊环境变量-taro_app_id
      */
     TARO_APP_ID: string
+    TARO_APP_CLOUD_ENV?: string
   }
 }

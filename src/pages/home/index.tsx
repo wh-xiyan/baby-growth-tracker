@@ -1,5 +1,6 @@
 import { View } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
+import { useEffect } from 'react'
 import { useSessionStore } from '../../stores/session'
 import './index.scss'
 import { PageHeader, SectionCard, SectionTitle, PrimaryButton } from '../../components/common'
@@ -7,10 +8,18 @@ import { PageHeader, SectionCard, SectionTitle, PrimaryButton } from '../../comp
 export default function Home() {
   const familyId = useSessionStore((state) => state.familyId)
   const initialized = useSessionStore((state) => state.initialized)
-  useDidShow(() => {
+  useEffect(() => {
     if (initialized && !familyId) Taro.navigateTo({ url: '/pages/onboarding/index' })
-  })
+  }, [familyId, initialized])
   const addRecord = () => Taro.navigateTo({ url: '/pages/record-edit/index' })
+  if (!initialized || !familyId)
+    return (
+      <View className='home-loading'>
+        <View className='home-loading-icon'>🍼</View>
+        <View className='home-loading-title'>正在准备你的小家</View>
+        <View className='home-loading-caption'>马上就好，先抱抱期待</View>
+      </View>
+    )
   return (
     <View className='page home-page'>
       <PageHeader

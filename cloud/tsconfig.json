@@ -8,5 +8,5 @@
     "skipLibCheck": true,
     "outDir": "dist"
   },
-  "include": ["functions/**/*.ts", "shared/**/*.ts"]
+  "include": ["functions/**/*.ts", "shared/**/*.ts", "types/**/*.d.ts"]
 }

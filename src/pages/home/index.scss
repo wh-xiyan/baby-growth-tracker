@@ -1,6 +1,39 @@
 .hero {
   border-left: 4px solid #2563eb;
 }
+.home-loading {
+  min-height: 100vh;
+  background: #fffaf5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #8e8580;
+}
+.home-loading-icon {
+  font-size: 48px;
+  animation: home-loading-wiggle 1.1s ease-in-out infinite;
+}
+.home-loading-title {
+  margin-top: 14px;
+  color: #625954;
+  font-size: 16px;
+  font-weight: 600;
+}
+.home-loading-caption {
+  margin-top: 7px;
+  color: #b2a8a2;
+  font-size: 12px;
+}
+@keyframes home-loading-wiggle {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
 .hero-name,
 .section-title {
   font-size: 18px;

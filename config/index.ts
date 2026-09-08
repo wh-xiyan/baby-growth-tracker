@@ -4,6 +4,7 @@ import devConfig from './dev'
 import prodConfig from './prod'
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
+  const cloudEnvId = process.env.TARO_APP_CLOUD_ENV || ''
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'baby-growth-tracker',
     date: '2026-9-4',
@@ -17,7 +18,9 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
     sourceRoot: 'src',
     outputRoot: 'dist',
     plugins: [],
-    defineConstants: {},
+    defineConstants: {
+      CLOUD_ENV_ID: JSON.stringify(cloudEnvId),
+    },
     copy: {
       patterns: [],
       options: {},

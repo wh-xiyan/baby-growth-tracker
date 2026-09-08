@@ -23,6 +23,10 @@ function App(props: PropsWithChildren) {
           childId: session.currentChildId,
         }),
       )
+      .catch((error) => {
+        console.error('云端登录初始化失败，请查看控制台', error)
+        Taro.showToast({ title: '登录初始化失败', icon: 'none' })
+      })
       .finally(() => setInitialized(true))
   })
 

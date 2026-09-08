@@ -2,13 +2,15 @@
   "name": "baby-growth-tracker-cloud",
   "private": true,
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/build-functions.cjs"
   },
   "dependencies": {
     "wx-server-sdk": "3.0.3"
   },
   "devDependencies": {
     "@types/node": "20.14.15",
+    "esbuild": "0.21.5",
     "typescript": "5.9.3"
   }
 }

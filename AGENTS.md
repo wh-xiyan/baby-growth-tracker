@@ -62,6 +62,16 @@ pnpm format:check
 - 保持组件和样式范围清晰，复用的页面样式放到 `src/app.scss`，页面专属样式放到页面目录。
 - 遵循现有 Prettier 和 ESLint 配置，默认使用单引号、无分号风格。
 
+### Cloud Function Formatting
+
+- 云函数源码位于 `cloud/functions/<name>/index.ts`，公共数据库和权限工具可复用 `cloud/shared/` 中的 TypeScript 模块。
+- 新增云函数时必须创建 `index.ts` 和 `package.json`。不要手写 `index.js`；运行入口由 `pnpm cloud:build` 统一生成到 `cloud/dist/functions/<name>/index.js`。
+- `pnpm cloud:build` 会将每个函数及其 `cloud/shared/` 依赖打包为独立部署产物，并将 `wx-server-sdk` 保留为函数目录的外部依赖。微信开发者工具的云函数根目录固定为 `cloud/dist/functions/`。
+- 云函数 TypeScript、构建脚本和 JSON 文件统一使用仓库根目录的 `.prettierrc`，格式化命令为 `pnpm format`，检查命令为 `pnpm format:check`。
+- 云函数类型检查使用 `pnpm --dir cloud exec tsc --noEmit`，或根目录命令 `pnpm cloud:typecheck`。
+- 云函数提交或上传前至少执行：`pnpm format:check`、`pnpm lint`、`pnpm --dir cloud exec tsc --noEmit` 和 `pnpm cloud:build`。
+- 不要在云函数中直接信任前端传入的 `openid`、`userId` 或角色；身份必须通过 `cloud.getWXContext()` 获取并经过公共权限工具校验。
+
 ## Styling
 
 - 使用 Sass 和现有全局设计风格；避免引入新的 CSS 框架或全局 reset。
@@ -86,10 +96,8 @@ pnpm format:check
 
 ## Troubleshooting
 
-- `process is not defined`: 检查运行时代码是否直接访问 `process.env`，并补充环境判断。
 - `Template tmpl_xx_xx not found`: 检查是否引入了 NutUI React Taro 或其他动态原生节点组件；优先替换为 `@tarojs/components`。
 - Sass `@import` 弃用警告：使用 `@use`，但要区分警告和真正的构建错误。
-- 微信开发者工具出现渲染层 `DOMNodeRemoved`：通常是工具 Chromium 警告，先检查是否同时存在逻辑层错误或 WXML 模板错误。
 - 构建输出疑似过期：停止 watch、清理开发者工具缓存后重新运行 `pnpm build:weapp`，再导入 `dist/`。
 
 ## Change Scope
