@@ -1,6 +1,6 @@
 @use './components/common/index.scss';
 
-:root {
+page {
   --color-page: #fffaf5;
   --color-surface: #fff;
   --color-ink: #403b39;
@@ -16,8 +16,6 @@
   --radius-input: 11px;
   --radius-button: 13px;
   --shadow-card: 0 8px 24px rgba(188, 135, 108, 0.1);
-}
-page {
   background: var(--color-page);
   color: var(--color-body);
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;

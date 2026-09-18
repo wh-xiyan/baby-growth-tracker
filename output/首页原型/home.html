@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            page: '#fffaf5', ink: '#403b39', body: '#665d58', muted: '#a49b95',
+            primary: '#e79576', primarydeep: '#c96f59', palepink: '#fff0eb',
+            paleblue: '#dff3f4', paleyellow: '#fff0bf', line: '#eee4df'
+          },
+          boxShadow: { soft: '0 8px 24px rgba(188,135,108,0.10)' }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #fffaf5; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    .modal-mask.hidden { display: none; }
+    .record-option:active { transform: scale(.98); }
+  </style>
+</head>
+<body>
+  <main id="app" class="bg-page min-h-screen flex flex-col text-body">
+    <section class="flex flex-col gap-5 px-5 pt-8 pb-28">
+      <header class="flex items-center justify-between">
+        <div class="flex flex-col gap-1">
+          <span class="text-[10px] font-bold tracking-[1.2px] text-primary">TODAY WITH LOVE</span>
+          <h1 class="text-[26px] leading-tight font-bold text-ink">宝宝成长录</h1>
+          <p class="text-[13px] text-muted">记录每一个值得记住的今天</p>
+        </div>
+        <button id="profileButton" type="button" class="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-soft text-primary">
+          <i class="fa-regular fa-bell text-[17px]"></i>
+        </button>
+      </header>
+
+      <section class="overflow-hidden rounded-[18px] bg-white shadow-soft">
+        <div class="flex items-center justify-between bg-palepink px-4 py-3">
+          <div class="flex items-center gap-2 text-[12px] font-semibold text-primarydeep">
+            <i class="fa-solid fa-heart"></i><span>宝宝今天 100 天啦</span>
+          </div>
+          <button id="switchChild" type="button" class="flex items-center gap-1 text-[11px] text-primarydeep"><span>切换宝宝</span><i class="fa-solid fa-chevron-down text-[9px]"></i></button>
+        </div>
+        <div class="flex items-center gap-4 p-4">
+          <div class="h-16 w-16 overflow-hidden rounded-full border-4 border-white shadow-[0_6px_16px_rgba(188,135,108,0.16)]">
+            <img src="./api/searchImage?query=smiling%20asian%20baby%20portrait&width=160&height=160" class="h-full w-full object-cover" alt="宝宝头像">
+          </div>
+          <div class="flex min-w-0 flex-1 flex-col gap-1">
+            <div class="flex items-center gap-2"><h2 class="text-[20px] font-bold text-ink">小糯米</h2><span class="rounded-full bg-paleyellow px-2 py-1 text-[10px] font-medium text-[#9c7421]">金牛座</span></div>
+            <p class="text-[12px] text-muted">出生第 100 天 · 3 个月 8 天</p>
+            <div class="flex items-center gap-2 text-[11px] text-primarydeep"><i class="fa-solid fa-sparkles"></i><span>每天都在解锁新本领</span></div>
+          </div>
+          <button id="childDetail" type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-page text-primary"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+        </div>
+      </section>
+
+      <section class="flex flex-col gap-3">
+        <div class="flex items-center justify-between px-1"><h2 class="text-[18px] font-bold text-ink">今日记录</h2><button id="viewRecords" type="button" class="text-[12px] text-primarydeep">查看全部</button></div>
+        <div class="flex flex-col items-center justify-center gap-3 rounded-[18px] bg-white px-5 py-6 text-center shadow-soft">
+          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-paleyellow text-[20px] text-primary"><i class="fa-solid fa-feather-pointed"></i></div>
+          <div class="flex flex-col gap-1"><p class="text-[14px] font-semibold text-ink">今天还没有记录</p><p class="text-[12px] text-muted">喂养、睡眠、心情都值得被记下</p></div>
+          <button id="openRecord" type="button" class="w-full rounded-[13px] bg-primary px-4 py-3 text-[15px] font-semibold text-white shadow-[0_7px_14px_rgba(231,149,118,0.20)]"><i class="fa-solid fa-plus"></i><span class="px-1">记录今天</span></button>
+        </div>
+      </section>
+
+      <section class="flex flex-col gap-3">
+        <div class="flex items-center justify-between px-1"><h2 class="text-[18px] font-bold text-ink">待办提醒</h2><span class="rounded-full bg-palepink px-2 py-1 text-[10px] font-medium text-primarydeep">1 项待办</span></div>
+        <div class="flex items-center gap-3 rounded-[18px] bg-white p-4 shadow-soft">
+          <div class="flex h-11 w-11 flex-none items-center justify-center rounded-[14px] bg-paleblue text-[#459da1]"><i class="fa-solid fa-syringe text-lg"></i></div>
+          <div class="flex min-w-0 flex-1 flex-col gap-1"><p class="text-[14px] font-semibold text-ink">五联疫苗第 3 剂</p><p class="text-[12px] text-muted">建议接种日期：6 月 18 日</p></div>
+          <button id="vaccineDetail" type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-page text-primary"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+        </div>
+      </section>
+
+      <section class="flex flex-col gap-3">
+        <div class="flex items-center justify-between px-1"><h2 class="text-[18px] font-bold text-ink">最近动态</h2><button id="viewActivity" type="button" class="text-[12px] text-primarydeep">更多动态</button></div>
+        <div class="flex gap-3 rounded-[18px] bg-white p-3 shadow-soft">
+          <img src="./api/searchImage?query=baby%20hands%20holding%20parent%20finger&width=160&height=160" class="h-20 w-20 rounded-[14px] object-cover" alt="成长记录配图">
+          <div class="flex flex-1 flex-col justify-between py-1"><div class="flex flex-col gap-1"><p class="text-[14px] font-semibold text-ink">第一次主动抓住妈妈的手</p><p class="text-[12px] leading-5 text-muted">小小的手掌，握住了全世界的安心。</p></div><span class="text-[11px] text-primarydeep">昨天 20:16 · 妈妈记录</span></div>
+        </div>
+      </section>
+
+      <section class="flex flex-col gap-3">
+        <h2 class="px-1 text-[18px] font-bold text-ink">快捷记录</h2>
+        <div class="grid grid-cols-4 gap-2">
+          <button id="feedRecord" type="button" class="record-option flex flex-col items-center gap-2 rounded-[16px] bg-white px-2 py-4 shadow-soft"><span class="flex h-10 w-10 items-center justify-center rounded-full bg-palepink text-primary"><i class="fa-solid fa-bottle-water"></i></span><span class="text-[11px] text-ink">喂养</span></button>
+          <button id="sleepRecord" type="button" class="record-option flex flex-col items-center gap-2 rounded-[16px] bg-white px-2 py-4 shadow-soft"><span class="flex h-10 w-10 items-center justify-center rounded-full bg-paleblue text-[#459da1]"><i class="fa-solid fa-moon"></i></span><span class="text-[11px] text-ink">睡眠</span></button>
+          <button id="growthRecord" type="button" class="record-option flex flex-col items-center gap-2 rounded-[16px] bg-white px-2 py-4 shadow-soft"><span class="flex h-10 w-10 items-center justify-center rounded-full bg-paleyellow text-[#bd8526]"><i class="fa-solid fa-ruler-vertical"></i></span><span class="text-[11px] text-ink">成长</span></button>
+          <button id="momentRecord" type="button" class="record-option flex flex-col items-center gap-2 rounded-[16px] bg-white px-2 py-4 shadow-soft"><span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#f1e9ff] text-[#8b71bd]"><i class="fa-solid fa-camera"></i></span><span class="text-[11px] text-ink">瞬间</span></button>
+        </div>
+      </section>
+    </section>
+
+    <nav class="fixed bottom-0 left-0 right-0 flex h-[68px] items-start justify-around border-t border-line bg-white px-5 pt-2">
+      <button id="navHome" type="button" class="flex w-14 flex-col items-center gap-1 text-primary"><i class="fa-solid fa-house text-[18px]"></i><span class="text-[10px] font-semibold">首页</span></button>
+      <button id="navGrowth" type="button" class="flex w-14 flex-col items-center gap-1 text-muted"><i class="fa-solid fa-chart-line text-[18px]"></i><span class="text-[10px]">成长</span></button>
+      <button id="navAlbum" type="button" class="flex w-14 flex-col items-center gap-1 text-muted"><i class="fa-regular fa-image text-[18px]"></i><span class="text-[10px]">相册</span></button>
+      <button id="navMine" type="button" class="flex w-14 flex-col items-center gap-1 text-muted"><i class="fa-regular fa-user text-[18px]"></i><span class="text-[10px]">我的</span></button>
+    </nav>
+
+    <div id="recordSheet" class="modal-mask hidden fixed inset-0 z-50 flex items-end bg-black/40">
+      <div class="flex w-full flex-col gap-5 rounded-t-[24px] bg-white p-6">
+        <div class="flex items-center justify-between"><div class="flex flex-col gap-1"><h3 class="text-[20px] font-bold text-ink">记录今天</h3><p class="text-[12px] text-muted">选择你想留下的成长片段</p></div><button id="closeRecord" type="button" class="flex h-8 w-8 items-center justify-center rounded-full bg-page text-muted"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="grid grid-cols-2 gap-3"><button id="sheetFeed" type="button" class="rounded-[14px] bg-palepink px-4 py-4 text-left text-[14px] font-semibold text-primarydeep"><i class="fa-solid fa-bottle-water"></i><span class="px-2">记录喂养</span></button><button id="sheetMoment" type="button" class="rounded-[14px] bg-paleblue px-4 py-4 text-left text-[14px] font-semibold text-[#459da1]"><i class="fa-solid fa-camera"></i><span class="px-2">记录瞬间</span></button></div>
+      </div>
+    </div>
+  </main>
+  <script id="interaction-data">
+`
+[
+  {"original":"#openRecord","trigger":"click","actions":[{"operation":"show","target":"#recordSheet","animation":"slideUp","animationTime":0.25}]},
+  {"original":"#closeRecord","trigger":"click","actions":[{"operation":"hide","target":"#recordSheet","animation":"slideDown","animationTime":0.2}]},
+  {"original":"#feedRecord","trigger":"click","actions":[{"operation":"show","target":"#recordSheet","animation":"slideUp","animationTime":0.25}]},
+  {"original":"#sleepRecord","trigger":"click","actions":[{"operation":"show","target":"#recordSheet","animation":"slideUp","animationTime":0.25}]},
+  {"original":"#growthRecord","trigger":"click","actions":[{"operation":"show","target":"#recordSheet","animation":"slideUp","animationTime":0.25}]},
+  {"original":"#momentRecord","trigger":"click","actions":[{"operation":"show","target":"#recordSheet","animation":"slideUp","animationTime":0.25}]}
+]
+`
+  </script>
+</body>
+</html>
