@@ -7,12 +7,23 @@ export async function main(event: Record<string, unknown>) {
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
   if (!event.childId || !event.category || !event.title || !event.occurredAt)
     throw new Error('INVALID_RECORD')
+  const child = await db
+    .collection('children')
+    .where({ _id: event.childId, familyId })
+    .limit(1)
+    .get()
+  if (!child.data[0]) throw new Error('CHILD_NOT_FOUND')
   const timestamp = now()
   const created = await db.collection('growth_records').add({
     data: {
-      ...event,
       familyId,
-      mediaFileIds: event.mediaFileIds || [],
+      childId: event.childId,
+      category: event.category,
+      title: String(event.title).trim(),
+      occurredAt: event.occurredAt,
+      content: event.content ? String(event.content) : '',
+      metrics: event.metrics || {},
+      mediaFileIds: Array.isArray(event.mediaFileIds) ? event.mediaFileIds : [],
       createdBy: member.userId,
       createdAt: timestamp,
       updatedAt: timestamp,

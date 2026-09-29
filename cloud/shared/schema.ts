@@ -71,7 +71,12 @@ export const schemas: Record<string, CollectionSchema> = {
       { name: 'title', type: 'string', required: true, description: '记录标题' },
       { name: 'occurredAt', type: 'date', required: true, description: '发生时间' },
       { name: 'content', type: 'string', description: '记录内容' },
-      { name: 'metrics', type: 'object', description: '数值扩展字段' },
+      {
+        name: 'metrics',
+        type: 'object',
+        description:
+          '按分类保存结构化字段：喂养方式、左右侧、时长、奶量、辅食名称、睡眠起止、身高和体重等',
+      },
       { name: 'mediaFileIds', type: 'array', description: '关联媒体文件 ID' },
       { name: 'createdBy', type: 'string', required: true, description: '创建人用户 ID' },
       { name: 'createdAt', type: 'date', required: true, description: '创建时间' },
@@ -116,6 +121,8 @@ export const schemas: Record<string, CollectionSchema> = {
       { name: 'fileId', type: 'string', required: true, description: '云存储文件 ID' },
       { name: 'fileType', type: 'string', required: true, description: 'image 或 video' },
       { name: 'recordId', type: 'string', description: '关联成长记录 ID' },
+      { name: 'size', type: 'number', description: '文件大小，单位字节' },
+      { name: 'duration', type: 'number', description: '视频时长，单位秒' },
       { name: 'takenAt', type: 'date', description: '拍摄时间' },
       { name: 'caption', type: 'string', description: '媒体说明' },
       { name: 'uploadedBy', type: 'string', required: true, description: '上传人用户 ID' },

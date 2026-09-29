@@ -1,0 +1,745 @@
+<html lang="zh-CN">
+
+  <head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              coral: '#e79576',
+              ink: '#403b39',
+              muted: '#a49b95',
+              line: '#eee4df'
+            }
+          }
+        }
+      };
+    </script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #fffaf5;
+        color: #403b39;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+      }
+
+      .filter-active {
+        background: #e79576;
+        color: #fff;
+      }
+
+      .detail-hidden {
+        display: none;
+      }
+
+      .toast-hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
+      }
+
+      .toast {
+        transition: all .2s ease;
+      }
+
+      .date-picker-mask.date-picker-hidden {
+        display: none;
+      }
+    </style>
+
+  </head>
+
+  <body>
+
+
+    <main id="record-list-page" class="min-h-screen bg-[#fffaf5] pb-28" style="">
+
+      <header class="flex items-center justify-between gap-2 px-5 pt-5 pb-4">
+        <button id="previous-day" type="button" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#8e837d] shadow-[0_8px_24px_rgba(188,135,108,0.1)]"><i class="fa-solid fa-chevron-left text-sm"></i></button>
+        <button id="date-summary" type="button" class="flex flex-1 flex-col items-center gap-1 rounded-[14px] bg-white px-3 py-2 shadow-[0_8px_24px_rgba(188,135,108,0.08)]"><span class="text-[18px] font-semibold tracking-[1px]">9月22日</span><span class="text-[11px] text-[#a49b95]">星期二 · 今天</span></button>
+        <button id="next-day" type="button" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#8e837d] shadow-[0_8px_24px_rgba(188,135,108,0.1)]"><i class="fa-solid fa-chevron-right text-sm"></i></button>
+        <button id="list-calendar" type="button" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fff0eb] text-[#e79576] shadow-[0_8px_24px_rgba(188,135,108,0.1)]"><i class="fa-regular fa-calendar text-[16px]"></i></button>
+      </header>
+
+      <div id="date-picker" class="date-picker-mask date-picker-hidden fixed inset-0 z-50 flex items-end bg-black/30"><div class="flex w-full flex-col gap-4 rounded-t-[24px] bg-white px-5 pb-8 pt-5"><div class="flex items-center justify-between"><span class="text-[17px] font-semibold">选择日期</span><button id="close-date-picker" type="button" class="flex h-9 w-9 items-center justify-center rounded-full bg-[#fffaf5] text-[#8e837d]"><i class="fa-solid fa-xmark"></i></button></div><div class="flex items-center justify-between"><button id="picker-prev-month" type="button" class="flex h-9 w-9 items-center justify-center rounded-full bg-[#fffaf5] text-[#8e837d]"><i class="fa-solid fa-chevron-left text-xs"></i></button><strong class="text-[15px]">2026年9月</strong><button id="picker-next-month" type="button" class="flex h-9 w-9 items-center justify-center rounded-full bg-[#fffaf5] text-[#8e837d]"><i class="fa-solid fa-chevron-right text-xs"></i></button></div><div class="grid grid-cols-7 gap-2 text-center text-[11px] text-[#a49b95]"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div class="grid grid-cols-7 gap-2 text-center text-[13px]"><span class="py-2 text-[#c9c0bb]">21</span><button id="date-22" type="button" class="rounded-full bg-[#e79576] py-2 font-semibold text-white">22</button><button id="date-23" type="button" class="rounded-full py-2 text-[#665d58]">23</button><button id="date-24" type="button" class="rounded-full py-2 text-[#665d58]">24</button><button id="date-25" type="button" class="rounded-full py-2 text-[#665d58]">25</button><button id="date-26" type="button" class="rounded-full py-2 text-[#665d58]">26</button><button id="date-27" type="button" class="rounded-full py-2 text-[#665d58]">27</button></div><button id="back-today" type="button" class="flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[#fff0eb] text-[14px] font-semibold text-[#c96f59]"><i class="fa-solid fa-arrow-rotate-left"></i><span>回到今天</span></button></div></div>
+
+
+      <section class="flex flex-col gap-4 px-5" style="">
+
+        <div class="grid grid-cols-3 gap-2 rounded-[20px] bg-white p-3 shadow-[0_8px_24px_rgba(188,135,108,0.1)]">
+
+          <div class="flex flex-col items-center gap-1 border-r border-[#eee4df] py-2">
+
+            <span class="text-[22px] font-semibold text-[#403b39]">
+
+              6
+            </span>
+
+
+            <span class="text-[12px] text-[#a49b95]">
+
+              今日记录
+            </span>
+          </div>
+
+
+          <div class="flex flex-col items-center gap-1 border-r border-[#eee4df] py-2">
+
+            <span class="text-[22px] font-semibold text-[#e79576]">
+
+              4
+            </span>
+
+
+            <span class="text-[12px] text-[#a49b95]">
+
+              喂养次数
+            </span>
+          </div>
+
+
+          <div class="flex flex-col items-center gap-1 py-2">
+
+            <span class="text-[22px] font-semibold text-[#719b9d]">
+
+              <span>
+
+                3
+              </span>
+
+
+              <span class="text-[13px]">
+
+                h
+              </span>
+
+
+              <span>
+
+                20
+              </span>
+            </span>
+
+
+            <span class="text-[12px] text-[#a49b95]">
+
+              睡眠时长
+            </span>
+          </div>
+        </div>
+
+
+        <div class="flex flex-col gap-3" style="">
+
+          <div class="flex items-center justify-between">
+
+            <h2 class="text-[16px] font-semibold">
+
+              时间线
+            </h2>
+
+
+            <button id="sort-button" type="button" class="flex items-center gap-1 text-[12px] text-[#a49b95]">
+
+              <i class="fa-solid fa-arrow-down-wide-short"></i>
+
+
+              <span>
+
+                按时间
+              </span>
+            </button>
+          </div>
+
+
+          <div class="flex gap-2 overflow-hidden" style="justify-content: start; gap: 8px;">
+
+            <button id="filter-all" type="button" class="filter-active rounded-full px-4 py-2 text-[12px]" style="">
+
+              全部
+            </button>
+
+
+            <button id="filter-feed" type="button" class="rounded-full bg-white px-4 py-2 text-[12px] text-[#8e837d]" style="">
+
+              喂养
+            </button>
+
+
+            <button id="filter-sleep" type="button" class="rounded-full bg-white px-4 py-2 text-[12px] text-[#8e837d]">
+
+              睡眠
+            </button>
+
+
+            <button id="filter-growth" type="button" class="rounded-full bg-white px-4 py-2 text-[12px] text-[#8e837d]">
+
+              成长
+            </button>
+          </div>
+        </div>
+
+
+        <section id="timeline" class="relative flex flex-col gap-3">
+
+          <div class="absolute left-[19px] top-4 bottom-4 w-px bg-[#eadbd4]"></div>
+
+
+          <article id="item-feed" class="relative flex gap-3">
+
+            <div class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fff0eb] text-[#e79576]">
+
+              <i class="fa-solid fa-bottle-water"></i>
+            </div>
+
+
+            <div class="flex flex-1 flex-col gap-2 rounded-[18px] bg-white p-4 shadow-[0_8px_24px_rgba(188,135,108,0.08)]">
+
+              <div class="flex items-center justify-between">
+
+                <div class="flex items-center gap-2">
+
+                  <span class="font-semibold">
+
+                    喂养
+                  </span>
+
+
+                  <span class="rounded-full bg-[#fff0eb] px-2 py-1 text-[11px] text-[#c96f59]">
+
+                    奶粉
+                  </span>
+                </div>
+
+
+                <span class="text-[12px] text-[#a49b95]">
+
+                  10:30
+                </span>
+              </div>
+
+
+              <div class="flex items-end gap-1">
+
+                <strong class="text-[25px] text-[#403b39]">
+
+                  120
+                </strong>
+
+
+                <span class="pb-1 text-[12px] text-[#a49b95]">
+
+                  ml
+                </span>
+              </div>
+
+
+              <button id="feed-detail-toggle" type="button" class="flex items-center justify-between border-t border-[#f2e8e3] pt-2 text-[12px] text-[#a49b95]">
+
+                <span>
+
+                  查看详情
+                </span>
+
+
+                <i class="fa-solid fa-chevron-down"></i>
+              </button>
+
+
+              <div id="feed-detail" class="detail-hidden rounded-[12px] bg-[#fffaf5] px-3 py-2 text-[12px] text-[#8e837d]" style="">
+
+                喝得很香，状态不错
+              </div>
+            </div>
+          </article>
+
+
+          <article id="item-sleep" class="relative flex gap-3">
+
+            <div class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef5fb] text-[#8ea6c6]">
+
+              <i class="fa-solid fa-moon"></i>
+            </div>
+
+
+            <div class="flex flex-1 flex-col gap-2 rounded-[18px] bg-white p-4 shadow-[0_8px_24px_rgba(188,135,108,0.08)]">
+
+              <div class="flex items-center justify-between">
+
+                <span class="font-semibold">
+
+                  睡眠
+                </span>
+
+
+                <span class="text-[12px] text-[#a49b95]">
+
+                  08:50
+                </span>
+              </div>
+
+
+              <div class="flex items-center gap-2">
+
+                <strong class="text-[18px]">
+
+                  1小时45分
+                </strong>
+
+
+                <span class="rounded-full bg-[#eef8f8] px-2 py-1 text-[11px] text-[#648b8d]">
+
+                  小睡
+                </span>
+              </div>
+
+
+              <button id="sleep-detail-toggle" type="button" class="flex items-center justify-between border-t border-[#f2e8e3] pt-2 text-[12px] text-[#a49b95]">
+
+                <span>
+
+                  查看详情
+                </span>
+
+
+                <i class="fa-solid fa-chevron-down"></i>
+              </button>
+
+
+              <div id="sleep-detail" class="detail-hidden rounded-[12px] bg-[#fffaf5] px-3 py-2 text-[12px] text-[#8e837d]" style="">
+
+                入睡 08:50 · 醒来 10:35
+              </div>
+            </div>
+          </article>
+
+
+          <article id="item-growth" class="relative flex gap-3">
+
+            <div class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eef7ed] text-[#82a987]">
+
+              <i class="fa-solid fa-ruler-vertical"></i>
+            </div>
+
+
+            <div class="flex flex-1 flex-col gap-2 rounded-[18px] bg-white p-4 shadow-[0_8px_24px_rgba(188,135,108,0.08)]">
+
+              <div class="flex items-center justify-between">
+
+                <span class="font-semibold">
+
+                  成长
+                </span>
+
+
+                <span class="text-[12px] text-[#a49b95]">
+
+                  昨天 19:20
+                </span>
+              </div>
+
+
+              <div class="flex gap-4">
+
+                <div class="flex items-baseline gap-1">
+
+                  <strong class="text-[18px]">
+
+                    72.5
+                  </strong>
+
+
+                  <span class="text-[11px] text-[#a49b95]">
+
+                    cm
+                  </span>
+                </div>
+
+
+                <div class="flex items-baseline gap-1">
+
+                  <strong class="text-[18px]">
+
+                    9.2
+                  </strong>
+
+
+                  <span class="text-[11px] text-[#a49b95]">
+
+                    kg
+                  </span>
+                </div>
+              </div>
+
+
+              <div class="rounded-[10px] bg-[#fffaf5] px-3 py-2 text-[12px] text-[#8e837d]">
+
+                今天第一次自己站起来啦
+              </div>
+            </div>
+          </article>
+
+
+          <article id="item-moment" class="relative flex gap-3">
+
+            <div class="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f9edf2] text-[#c98ca1]">
+
+              <i class="fa-solid fa-camera-retro"></i>
+            </div>
+
+
+            <div class="flex flex-1 flex-col gap-2 rounded-[18px] bg-white p-4 shadow-[0_8px_24px_rgba(188,135,108,0.08)]">
+
+              <div class="flex items-center justify-between">
+
+                <span class="font-semibold">
+
+                  瞬间
+                </span>
+
+
+                <span class="text-[12px] text-[#a49b95]">
+
+                  昨天 16:42
+                </span>
+              </div>
+
+
+              <div class="flex items-center gap-3">
+
+                <img src="./api/searchImage?query=happy baby playing at home&amp;width=96&amp;height=96" class="h-16 w-16 rounded-[12px] object-cover" alt="宝宝瞬间">
+
+
+                <span class="text-[13px] leading-5 text-[#665d58]">
+
+                  阳光落在脸上的样子，真的好可爱。
+                </span>
+              </div>
+            </div>
+          </article>
+        </section>
+
+
+        <div id="empty-state" class="detail-hidden flex flex-col items-center gap-3 rounded-[20px] bg-white px-5 py-8 text-center shadow-[0_8px_24px_rgba(188,135,108,0.08)]">
+
+          <div class="flex h-14 w-14 items-center justify-center rounded-full bg-[#fff0eb] text-[#e79576]">
+
+            <i class="fa-regular fa-calendar-xmark text-xl"></i>
+          </div>
+
+
+          <span class="font-semibold">
+
+            今天还没有这类记录
+          </span>
+
+
+          <span class="text-[12px] text-[#a49b95]">
+
+            点击下方按钮，记录宝宝的每个小瞬间
+          </span>
+        </div>
+      </section>
+
+
+      <button id="add-record" type="button" class="fixed bottom-5 left-5 right-5 flex h-14 items-center justify-center gap-2 rounded-[15px] bg-[#e79576] text-[16px] font-semibold text-white shadow-[0_10px_24px_rgba(231,149,118,0.28)]">
+
+        <i class="fa-solid fa-plus"></i>
+
+
+        <span>
+
+          添加记录
+        </span>
+      </button>
+
+
+      <div id="list-toast" class="toast toast-hidden fixed bottom-24 left-5 right-5 flex items-center justify-center gap-2 rounded-[14px] bg-[#403b39] px-4 py-3 text-[14px] text-white shadow-[0_8px_24px_rgba(0,0,0,0.16)]">
+
+        <i class="fa-solid fa-circle-info text-[#ffd88a]"></i>
+
+
+        <span>
+
+          已切换记录筛选
+        </span>
+      </div>
+    </main>
+
+    <script id="interaction-data">
+      `[
+  {
+    "original": "#date-summary",
+    "trigger": "click",
+    "actions": [
+      {"operation": "show", "target": "#date-picker"}
+    ]
+  },
+  {
+    "original": "#list-calendar",
+    "trigger": "click",
+    "actions": [
+      {"operation": "show", "target": "#date-picker"}
+    ]
+  },
+  {
+    "original": "#close-date-picker",
+    "trigger": "click",
+    "actions": [
+      {"operation": "hide", "target": "#date-picker"}
+    ]
+  },
+  {
+    "original": "#date-22",
+    "trigger": "click",
+    "actions": [
+      {"operation": "hide", "target": "#date-picker"},
+      {"operation": "show", "target": "#list-toast"},
+      {"operation": "hide", "target": "#list-toast", "delayTime": 1.5}
+    ]
+  },
+  {
+    "original": "#date-23",
+    "trigger": "click",
+    "actions": [
+      {"operation": "hide", "target": "#date-picker"},
+      {"operation": "show", "target": "#list-toast"},
+      {"operation": "hide", "target": "#list-toast", "delayTime": 1.5}
+    ]
+  },
+  {
+    "original": "#date-24",
+    "trigger": "click",
+    "actions": [
+      {"operation": "hide", "target": "#date-picker"},
+      {"operation": "show", "target": "#list-toast"},
+      {"operation": "hide", "target": "#list-toast", "delayTime": 1.5}
+    ]
+  },
+  {
+    "original": "#date-25",
+    "trigger": "click",
+    "actions": [
+      {"operation": "hide", "target": "#date-picker"},
+      {"operation": "show", "target": "#list-toast"},
+      {"operation": "hide", "target": "#list-toast", "delayTime": 1.5}
+    ]
+  },
+  {
+    "original": "#date-26",
+    "trigger": "click",
+    "actions": [
+      {"operation": "hide", "target": "#date-picker"},
+      {"operation": "show", "target": "#list-toast"},
+      {"operation": "hide", "target": "#list-toast", "delayTime": 1.5}
+    ]
+  },
+  {
+    "original": "#date-27",
+    "trigger": "click",
+    "actions": [
+      {"operation": "hide", "target": "#date-picker"},
+      {"operation": "show", "target": "#list-toast"},
+      {"operation": "hide", "target": "#list-toast", "delayTime": 1.5}
+    ]
+  },
+  {
+    "original": "#back-today",
+    "trigger": "click",
+    "actions": [
+      {"operation": "hide", "target": "#date-picker"},
+      {"operation": "show", "target": "#list-toast"},
+      {"operation": "hide", "target": "#list-toast", "delayTime": 1.5}
+    ]
+  },
+  {
+    "original": "#previous-day",
+    "trigger": "click",
+    "actions": [
+      {"operation": "show", "target": "#list-toast"},
+      {"operation": "hide", "target": "#list-toast", "delayTime": 1.5}
+    ]
+  },
+  {
+    "original": "#next-day",
+    "trigger": "click",
+    "actions": [
+      {"operation": "show", "target": "#list-toast"},
+      {"operation": "hide", "target": "#list-toast", "delayTime": 1.5}
+    ]
+  },
+  {
+    "original": "#sort-button",
+    "trigger": "click",
+    "actions": [
+      {
+        "operation": "show",
+        "target": "#list-toast"
+      },
+      {
+        "operation": "hide",
+        "delayTime": 1.5,
+        "target": "#list-toast"
+      }
+    ]
+  },
+  {
+    "original": "#feed-detail-toggle",
+    "trigger": "click",
+    "actions": [
+      {
+        "operation": "show",
+        "target": "#feed-detail"
+      }
+    ]
+  },
+  {
+    "original": "#sleep-detail-toggle",
+    "trigger": "click",
+    "actions": [
+      {
+        "operation": "show",
+        "target": "#sleep-detail"
+      }
+    ]
+  },
+  {
+    "original": "#filter-all",
+    "trigger": "click",
+    "actions": [
+      {
+        "operation": "show",
+        "target": "#item-feed,#item-sleep,#item-growth,#item-moment"
+      },
+      {
+        "operation": "hide",
+        "target": "#empty-state"
+      },
+      {
+        "operation": "addClass",
+        "target": "#filter-all",
+        "params": "filter-active",
+        "operationTitle": "显示全部"
+      },
+      {
+        "operation": "removeClass",
+        "target": "#filter-feed,#filter-sleep,#filter-growth",
+        "params": "filter-active",
+        "operationTitle": "更新筛选"
+      }
+    ]
+  },
+  {
+    "original": "#filter-feed",
+    "trigger": "click",
+    "actions": [
+      {
+        "operation": "hide",
+        "target": "#item-sleep,#item-growth,#item-moment"
+      },
+      {
+        "operation": "show",
+        "target": "#item-feed"
+      },
+      {
+        "operation": "hide",
+        "target": "#empty-state"
+      },
+      {
+        "operation": "addClass",
+        "target": "#filter-feed",
+        "params": "filter-active",
+        "operationTitle": "筛选喂养"
+      },
+      {
+        "operation": "removeClass",
+        "target": "#filter-all,#filter-sleep,#filter-growth",
+        "params": "filter-active",
+        "operationTitle": "更新筛选"
+      }
+    ]
+  },
+  {
+    "original": "#filter-sleep",
+    "trigger": "click",
+    "actions": [
+      {
+        "operation": "hide",
+        "target": "#item-feed,#item-growth,#item-moment"
+      },
+      {
+        "operation": "show",
+        "target": "#item-sleep"
+      },
+      {
+        "operation": "hide",
+        "target": "#empty-state"
+      },
+      {
+        "operation": "addClass",
+        "target": "#filter-sleep",
+        "params": "filter-active",
+        "operationTitle": "筛选睡眠"
+      },
+      {
+        "operation": "removeClass",
+        "target": "#filter-all,#filter-feed,#filter-growth",
+        "params": "filter-active",
+        "operationTitle": "更新筛选"
+      }
+    ]
+  },
+  {
+    "original": "#filter-growth",
+    "trigger": "click",
+    "actions": [
+      {
+        "operation": "hide",
+        "target": "#item-feed,#item-sleep,#item-moment"
+      },
+      {
+        "operation": "show",
+        "target": "#item-growth"
+      },
+      {
+        "operation": "hide",
+        "target": "#empty-state"
+      },
+      {
+        "operation": "addClass",
+        "target": "#filter-growth",
+        "params": "filter-active",
+        "operationTitle": "筛选成长"
+      },
+      {
+        "operation": "removeClass",
+        "target": "#filter-all,#filter-feed,#filter-sleep",
+        "params": "filter-active",
+        "operationTitle": "更新筛选"
+      }
+    ]
+  },
+  {
+    "original": "#add-record",
+    "trigger": "click",
+    "actions": [
+      {
+        "operation": "openPage",
+        "params": "record-edit"
+      }
+    ]
+  }
+]`
+    </script>
+  </body>
+
+</html>

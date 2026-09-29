@@ -13,6 +13,25 @@ export type RecordCategory =
   | 'award'
   | 'note'
 
+export type FeedingType = 'breastfeeding' | 'formula' | 'solid_food'
+
+export interface RecordMetrics {
+  feedingType?: FeedingType
+  side?: 'left' | 'right'
+  durationMinutes?: number
+  amount?: number
+  unit?: 'ml' | 'g'
+  foodType?: 'staple' | 'vegetable' | 'meat'
+  foods?: string
+  allergy?: string
+  sleepStart?: string
+  sleepEnd?: string
+  sleepDurationMinutes?: number
+  height?: number
+  weight?: number
+  [key: string]: string | number | undefined
+}
+
 export interface GrowthRecord {
   id: string
   familyId: string
@@ -21,6 +40,7 @@ export interface GrowthRecord {
   title: string
   occurredAt: string
   content?: string
+  metrics?: RecordMetrics
   mediaFileIds: string[]
   createdBy: string
   createdAt: string

@@ -1,7 +1,9 @@
 import type { PropsWithChildren } from 'react'
+import { Fragment, createElement } from 'react'
 import Taro, { useLaunch } from '@tarojs/taro'
 import { bootstrapSession } from './services/auth'
 import { getCloudEnvId, isCloudConfigured } from './services/cloud'
+import { PageLoading } from './components/page-loading'
 import { useSessionStore } from './stores/session'
 // 全局样式
 import './app.scss'
@@ -9,6 +11,7 @@ import './app.scss'
 function App(props: PropsWithChildren) {
   const setSession = useSessionStore((state) => state.setSession)
   const setInitialized = useSessionStore((state) => state.setInitialized)
+  const initialized = useSessionStore((state) => state.initialized)
 
   useLaunch(() => {
     if (isCloudConfigured()) {
@@ -30,7 +33,12 @@ function App(props: PropsWithChildren) {
       .finally(() => setInitialized(true))
   })
 
-  return props.children
+  return createElement(
+    Fragment,
+    null,
+    props.children,
+    createElement(PageLoading, { visible: !initialized }),
+  )
 }
 
 export default App

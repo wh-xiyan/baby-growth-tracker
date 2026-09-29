@@ -2,6 +2,8 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useMemo, useState } from 'react'
 import { useSessionStore } from '../../stores/session'
+import { Icon } from '../../components/icon'
+import { PageLoading } from '../../components/page-loading'
 import './index.scss'
 
 function ageOf(birthday: string) {
@@ -61,14 +63,8 @@ export default function Home() {
     setCurrentChild(children[(index + 1) % children.length].id)
   }
 
-  if (!initialized || !familyId)
-    return (
-      <View className='home-loading'>
-        <View className='home-loading-icon'>🍼</View>
-        <View className='home-loading-title'>正在准备你的小家</View>
-        <View className='home-loading-caption'>马上就好，先抱抱期待</View>
-      </View>
-    )
+  if (!initialized) return <PageLoading title='正在准备你的小家' caption='马上就好' />
+  if (!familyId) return null
 
   const age = child ? ageOf(child.birthday) : '还未设置'
   const zodiac = child ? zodiacOf(child.birthday) : '成长中'
@@ -85,7 +81,7 @@ export default function Home() {
             className='icon-button'
             onClick={() => Taro.navigateTo({ url: '/pages/settings/index' })}
           >
-            ♧
+            <Icon name='config' size={18} color='#E79576' />
           </Button>
         </View>
         <View className='child-card'>
@@ -94,7 +90,8 @@ export default function Home() {
               ♥ <Text>宝宝今天 {age} 啦</Text>
             </View>
             <Button className='switch-child' onClick={switchChild}>
-              切换宝宝⌄
+              <Text>切换宝宝</Text>
+              <Icon name='down' size={12} color='#E79576' />
             </Button>
           </View>
           <View className='child-card-body'>
@@ -118,7 +115,9 @@ export default function Home() {
         <View className='home-section'>
           <View className='section-heading'>
             <Text>今日记录</Text>
-            <Button onClick={() => Taro.switchTab({ url: '/pages/growth/index' })}>查看全部</Button>
+            <Button onClick={() => Taro.navigateTo({ url: '/pages/record-list/index' })}>
+              查看全部
+            </Button>
           </View>
           <View className='empty-record-card'>
             <View className='empty-icon'>✎</View>
@@ -132,18 +131,9 @@ export default function Home() {
         <View className='home-section'>
           <View className='section-heading'>
             <Text>待办提醒</Text>
-            <Text className='todo-badge'>1 项待办</Text>
           </View>
-          <View
-            className='todo-card'
-            onClick={() => Taro.navigateTo({ url: '/pages/vaccine/index' })}
-          >
-            <View className='todo-icon'>♧</View>
-            <View className='todo-copy'>
-              <Text className='todo-title'>五联疫苗第 3 剂</Text>
-              <Text className='todo-date'>建议接种日期：6 月 18 日</Text>
-            </View>
-            <Text className='card-arrow'>›</Text>
+          <View className='todo-empty'>
+            <Text>暂无待办事项</Text>
           </View>
         </View>
         <View className='home-section'>
@@ -169,19 +159,27 @@ export default function Home() {
           </View>
           <View className='quick-grid'>
             <Button className='quick-card quick-feed' onClick={() => navigateRecord('feeding')}>
-              <Text className='quick-icon'>♨</Text>
+              <View className='quick-icon'>
+                <Icon name='baby-bottle' size={24} color='#E79576' />
+              </View>
               <Text>喂养</Text>
             </Button>
             <Button className='quick-card quick-sleep' onClick={() => navigateRecord('sleep')}>
-              <Text className='quick-icon'>☾</Text>
+              <View className='quick-icon'>
+                <Icon name='moon' size={24} color='#459DA1' />
+              </View>
               <Text>睡眠</Text>
             </Button>
             <Button className='quick-card quick-growth' onClick={() => navigateRecord('milestone')}>
-              <Text className='quick-icon'>↕</Text>
+              <View className='quick-icon'>
+                <Icon name='sapling' size={24} color='#BD8526' />
+              </View>
               <Text>成长</Text>
             </Button>
             <Button className='quick-card quick-moment' onClick={() => navigateRecord('note')}>
-              <Text className='quick-icon'>▧</Text>
+              <View className='quick-icon'>
+                <Icon name='camera' size={24} color='#8B71BD' />
+              </View>
               <Text>瞬间</Text>
             </Button>
           </View>
@@ -204,10 +202,16 @@ export default function Home() {
                 className='sheet-option option-pink'
                 onClick={() => navigateRecord('feeding')}
               >
-                ♨ <Text>记录喂养</Text>
+                <View className='sheet-option-icon'>
+                  <Icon name='baby-bottle' size={24} color='#E79576' />
+                </View>
+                <Text>记录喂养</Text>
               </Button>
               <Button className='sheet-option option-blue' onClick={() => navigateRecord('note')}>
-                ▧ <Text>记录瞬间</Text>
+                <View className='sheet-option-icon'>
+                  <Icon name='camera' size={24} color='#459DA1' />
+                </View>
+                <Text>记录瞬间</Text>
               </Button>
             </View>
           </View>

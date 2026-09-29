@@ -3,6 +3,7 @@ import Taro from '@tarojs/taro'
 import { useMemo, useState } from 'react'
 import { createFamilyAndChild } from '../../services/auth'
 import { useSessionStore } from '../../stores/session'
+import { PageLoading } from '../../components/page-loading'
 import './index.scss'
 
 type Gender = 'male' | 'female' | 'unknown'
@@ -52,14 +53,7 @@ export default function Onboarding() {
     }
   }
 
-  if (!initialized)
-    return (
-      <View className='onboarding-loading'>
-        <View className='loading-bottle'>🍼</View>
-        <View className='loading-title'>正在准备你的小家</View>
-        <View className='loading-caption'>马上就好，先抱抱期待</View>
-      </View>
-    )
+  if (!initialized) return <PageLoading title='正在准备你的小家' caption='马上就好' />
 
   return (
     <View className='onboarding-page'>

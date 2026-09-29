@@ -6,6 +6,7 @@ export default defineAppConfig({
     'pages/profile/index',
     'pages/onboarding/index',
     'pages/record-edit/index',
+    'pages/record-list/index',
     'pages/record-detail/index',
     'pages/vaccine/index',
     'pages/family/index',

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>tailwind.config={theme:{extend:{colors:{coral:'#e79576',deepcoral:'#c96f59',ink:'#403b39',cream:'#fffaf5',mist:'#fff0eb'}}}};</script>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#fffaf5;color:#403b39;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}.state-hidden{display:none}.loader-ring{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loader-dot{animation:blink 1.2s ease-in-out infinite}.loader-dot.two{animation-delay:.18s}.loader-dot.three{animation-delay:.36s}@keyframes blink{50%{opacity:.25;transform:translateY(-2px)}}.page-preview{filter:blur(1px);opacity:.5}.loading-mask{background:rgba(255,250,245,.78);backdrop-filter:blur(2px)}.toast-hidden{opacity:0;pointer-events:none;transform:translateY(8px)}.toast{transition:all .2s ease}
+  </style>
+</head>
+<body>
+  <main class="relative flex min-h-screen flex-col overflow-hidden bg-[#fffaf5]">
+    <section id="generic-page-preview" class="page-preview flex flex-1 flex-col gap-5 px-5 pb-8 pt-6" aria-label="任意业务页面内容示意">
+      <div class="flex items-center justify-between"><div class="h-10 w-10 rounded-full bg-white"></div><div class="h-5 w-28 rounded-full bg-white"></div><div class="h-10 w-10 rounded-full bg-white"></div></div>
+      <div class="h-28 rounded-[20px] bg-white shadow-[0_8px_24px_rgba(188,135,108,0.08)]"></div>
+      <div class="flex gap-3"><div class="h-20 flex-1 rounded-[18px] bg-white"></div><div class="h-20 flex-1 rounded-[18px] bg-white"></div></div>
+      <div class="flex flex-col gap-3"><div class="h-5 w-24 rounded-full bg-white"></div><div class="h-24 rounded-[18px] bg-white"></div><div class="h-24 rounded-[18px] bg-white"></div><div class="h-24 rounded-[18px] bg-white"></div></div>
+    </section>
+
+    <section id="loading-mask" class="loading-mask absolute inset-0 z-10 flex flex-col items-center justify-center gap-5 px-8">
+      <div class="relative flex h-22 w-22 items-center justify-center"><div class="loader-ring h-20 w-20 rounded-full border-[5px] border-[#f4ded5] border-t-[#e79576]"></div><div class="absolute flex h-12 w-12 items-center justify-center rounded-[17px] bg-white text-[#e79576] shadow-[0_8px_24px_rgba(188,135,108,0.15)]"><i class="fa-solid fa-heart text-[20px]"></i></div></div>
+      <div class="flex flex-col items-center gap-2"><h1 class="text-[16px] font-semibold">正在加载</h1><div class="flex items-center gap-1 text-[13px] text-[#a49b95]"><span>请稍候</span><span class="loader-dot">·</span><span class="loader-dot two">·</span><span class="loader-dot three">·</span></div></div>
+      <button id="show-ready" type="button" class="rounded-full bg-white px-4 py-2 text-[11px] text-[#a49b95] shadow-[0_5px_16px_rgba(188,135,108,0.1)]">预览完成态</button>
+    </section>
+
+    <section id="ready-mask" class="state-hidden loading-mask absolute inset-0 z-10 flex flex-col items-center justify-center gap-5 px-8"><div class="flex h-20 w-20 items-center justify-center rounded-full bg-[#eaf7eb] text-[#73a87a] shadow-[0_8px_24px_rgba(116,166,119,0.13)]"><i class="fa-solid fa-check text-[29px]"></i></div><div class="flex flex-col items-center gap-2"><h1 class="text-[16px] font-semibold">加载完成</h1><p class="text-[13px] text-[#a49b95]">页面内容已准备好</p></div><button id="hide-overlay" type="button" class="flex h-12 w-full items-center justify-center rounded-[14px] bg-[#e79576] text-[14px] font-semibold text-white shadow-[0_10px_24px_rgba(231,149,118,0.24)]">查看页面</button></section>
+
+    <section id="error-mask" class="state-hidden loading-mask absolute inset-0 z-10 flex flex-col items-center justify-center gap-5 px-8"><div class="flex h-20 w-20 items-center justify-center rounded-full bg-[#fff0eb] text-[#e79576]"><i class="fa-solid fa-cloud-exclamation text-[29px]"></i></div><div class="flex flex-col items-center gap-2 text-center"><h1 class="text-[16px] font-semibold">加载失败</h1><p class="text-[13px] leading-5 text-[#a49b95]">内容暂时无法获取，请检查网络后重试</p></div><button id="retry-mask" type="button" class="flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#e79576] text-[14px] font-semibold text-white shadow-[0_10px_24px_rgba(231,149,118,0.24)]"><i class="fa-solid fa-rotate-right"></i><span>重新加载</span></button></section>
+
+    <div class="absolute bottom-6 left-0 right-0 z-20 flex justify-center gap-2"><button id="show-loading" type="button" class="rounded-full bg-white px-3 py-2 text-[11px] text-[#a49b95] shadow-[0_5px_16px_rgba(188,135,108,0.1)]">加载中</button><button id="show-error" type="button" class="rounded-full bg-white px-3 py-2 text-[11px] text-[#a49b95] shadow-[0_5px_16px_rgba(188,135,108,0.1)]">失败态</button></div>
+    <div id="loading-toast" class="toast toast-hidden absolute bottom-20 left-5 right-5 z-30 flex h-12 items-center justify-center gap-2 rounded-[14px] bg-[#403b39] px-4 text-[13px] text-white shadow-[0_8px_24px_rgba(0,0,0,0.16)]"><i class="loader-ring fa-solid fa-circle-notch text-[#ffd88a]"></i><span>正在重新加载</span></div>
+  </main>
+  <script id="interaction-data">
+`
+[
+  {"original":"#show-ready","trigger":"click","actions":[{"operation":"hide","target":"#loading-mask,#error-mask"},{"operation":"show","target":"#ready-mask"}]},
+  {"original":"#hide-overlay","trigger":"click","actions":[{"operation":"hide","target":"#ready-mask"}]},
+  {"original":"#show-loading","trigger":"click","actions":[{"operation":"hide","target":"#ready-mask,#error-mask"},{"operation":"show","target":"#loading-mask"}]},
+  {"original":"#show-error","trigger":"click","actions":[{"operation":"hide","target":"#loading-mask,#ready-mask"},{"operation":"show","target":"#error-mask"}]},
+  {"original":"#retry-mask","trigger":"click","actions":[{"operation":"hide","target":"#error-mask"},{"operation":"show","target":"#loading-mask,#loading-toast"},{"operation":"hide","target":"#loading-toast","delayTime":1.5}]}
+]
+`
+  </script>
+</body>
+</html>
