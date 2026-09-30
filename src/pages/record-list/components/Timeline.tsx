@@ -1,12 +1,21 @@
-import { Button, Image, Text, View } from '@tarojs/components'
+import { Button, Text, View } from '@tarojs/components'
 import { useMemo, useState } from 'react'
 import { Icon } from '../../../components/icon'
+import { MediaThumbnails } from '../../../components/media/MediaThumbnail'
 import type { DailyRecord } from '../../../services/records'
 import type { RecordMetrics } from '../../../types/record'
 import { categoryMeta, type Filter } from '../constants'
 import { durationLabel, timeOf } from '../utils'
 
-export function Timeline({ records, filter }: { records: DailyRecord[]; filter: Filter }) {
+export function Timeline({
+  records,
+  filter,
+  familyId,
+}: {
+  records: DailyRecord[]
+  filter: Filter
+  familyId?: string
+}) {
   const [expandedId, setExpandedId] = useState<string>()
   const filteredRecords = useMemo(
     () =>
@@ -33,6 +42,7 @@ export function Timeline({ records, filter }: { records: DailyRecord[]; filter: 
         <RecordItem
           key={record.id}
           record={record}
+          familyId={familyId}
           expanded={expandedId === record.id}
           onToggle={() => setExpandedId(expandedId === record.id ? undefined : record.id)}
         />
@@ -43,19 +53,17 @@ export function Timeline({ records, filter }: { records: DailyRecord[]; filter: 
 
 function RecordItem({
   record,
+  familyId,
   expanded,
   onToggle,
 }: {
   record: DailyRecord
+  familyId?: string
   expanded: boolean
   onToggle: () => void
 }) {
   const meta = categoryMeta[record.category] || categoryMeta.note
   const metrics = record.metrics || {}
-  const media = record.mediaFileIds?.[0]
-  const hasMedia = Boolean(
-    media && (media.startsWith('http') || media.startsWith('wxfile://') || media.startsWith('/')),
-  )
 
   return (
     <View className='timeline-item'>
@@ -77,7 +85,14 @@ function RecordItem({
         {record.category === 'milestone' && <GrowthContent record={record} metrics={metrics} />}
         {record.category === 'note' && (
           <View className='note-content'>
-            {hasMedia && media && <Image className='note-image' src={media} mode='aspectFill' />}
+            {familyId && (
+              <MediaThumbnails
+                className='note-image'
+                containerClassName='note-images'
+                familyId={familyId}
+                fileIds={record.mediaFileIds || []}
+              />
+            )}
             {record.content && <Text>{record.content}</Text>}
           </View>
         )}

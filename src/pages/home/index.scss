@@ -225,6 +225,122 @@
 .primary-button::after {
   border: 0;
 }
+.record-state {
+  display: flex;
+  min-height: 112px;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+  color: var(--color-muted);
+  font-size: 13px;
+}
+.record-state-button {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+.record-state-button::after,
+.home-record-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 16px 14px;
+  border-radius: var(--radius-card);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+.home-record-timeline-line {
+  position: absolute;
+  top: 27px;
+  bottom: 59px;
+  left: 93px;
+  width: 1px;
+  background: #f1e5de;
+}
+.home-record-item {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+.home-record-time {
+  width: 50px;
+  flex: none;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-align: right;
+}
+.home-record-icon {
+  z-index: 1;
+  display: flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.home-record-content {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+.home-record-category {
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.home-record-summary {
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-record-thumbnail {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 8px;
+}
+.home-record-thumbnails {
+  display: flex;
+  width: 68px;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.home-record-thumbnail-item {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+.home-record-thumbnail-more {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(55, 45, 41, 0.62);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
 .todo-empty {
   display: flex;
   align-items: center;

@@ -1,6 +1,42 @@
 import Taro from '@tarojs/taro'
 import { callCloudFunction, isCloudConfigured } from './cloud'
 
+const isDirectMediaUrl = (fileId: string) =>
+  fileId.startsWith('http://') ||
+  fileId.startsWith('https://') ||
+  fileId.startsWith('wxfile://') ||
+  fileId.startsWith('/')
+
+export async function resolveMediaUrl(
+  familyId: string,
+  fileId: string,
+): Promise<string | undefined> {
+  return (await resolveMediaUrls(familyId, [fileId]))[0]
+}
+
+export async function resolveMediaUrls(familyId: string, fileIds: string[]): Promise<string[]> {
+  const uniqueFileIds = [...new Set(fileIds.filter(Boolean))]
+  if (!uniqueFileIds.length) return []
+  const resolvedUrls = new Map(
+    uniqueFileIds
+      .filter((fileId) => isDirectMediaUrl(fileId) || !isCloudConfigured())
+      .map((fileId) => [fileId, fileId]),
+  )
+  const cloudFileIds = uniqueFileIds.filter((fileId) => !resolvedUrls.has(fileId))
+  if (!cloudFileIds.length)
+    return fileIds.map((fileId) => resolvedUrls.get(fileId)).filter(isResolvedMediaUrl)
+  const urls = await callCloudFunction<Array<{ fileId: string; tempFileURL: string }>>(
+    'getMediaTempUrls',
+    { familyId, fileIds: cloudFileIds },
+  )
+  for (const item of urls) resolvedUrls.set(item.fileId, item.tempFileURL)
+  return fileIds.map((fileId) => resolvedUrls.get(fileId)).filter(isResolvedMediaUrl)
+}
+
+function isResolvedMediaUrl(url: string | undefined): url is string {
+  return Boolean(url)
+}
+
 export async function uploadMediaAsset(input: {
   familyId: string
   childId: string

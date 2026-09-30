@@ -6,6 +6,7 @@ import { uploadMediaAsset } from '../../services/media'
 import { useSessionStore } from '../../stores/session'
 import { Icon } from '../../components/icon'
 import type { IconName } from '../../components/icon'
+import { MediaThumbnail } from '../../components/media/MediaThumbnail'
 import type { FeedingType, RecordCategory } from '../../types/record'
 import './index.scss'
 
@@ -86,6 +87,7 @@ export default function RecordEdit() {
   )
 
   const save = async () => {
+    if (submitting || mediaUploading) return
     if (!familyId || !childId) {
       Taro.showToast({ title: '请先完成宝宝档案', icon: 'none' })
       return
@@ -141,7 +143,8 @@ export default function RecordEdit() {
         mediaFileIds,
       })
       Taro.showToast({ title: '记录已保存', icon: 'success' })
-      setTimeout(() => Taro.navigateBack(), 500)
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      Taro.navigateBack()
     } catch (error) {
       console.error('保存成长记录失败', error)
       Taro.showToast({ title: '保存失败，请稍后重试', icon: 'none' })
@@ -151,6 +154,7 @@ export default function RecordEdit() {
   }
 
   const chooseMedia = async () => {
+    if (mediaUploading || submitting) return
     if (!familyId || !childId) {
       Taro.showToast({ title: '请先完成宝宝档案', icon: 'none' })
       return
@@ -396,12 +400,27 @@ export default function RecordEdit() {
       {mainTab === 'note' && (
         <View className='record-card'>
           <CardTitle title='记录瞬间' icon='camera' hint='图片与文字' />
-          <Button className='media-placeholder' loading={mediaUploading} onClick={chooseMedia}>
+          <Button
+            className='media-placeholder'
+            disabled={mediaUploading || submitting}
+            loading={mediaUploading}
+            onClick={chooseMedia}
+          >
             <Icon name='upload-one' size={28} color='#E79576' />
-            <Text>
-              {mediaFileIds.length ? `已添加 ${mediaFileIds.length} 个媒体` : '添加一张图片或视频'}
-            </Text>
+            <Text>{mediaFileIds.length ? '继续添加图片或视频' : '添加一张图片或视频'}</Text>
           </Button>
+          {mediaFileIds.length > 0 && familyId && (
+            <View className='media-preview-list'>
+              {mediaFileIds.map((fileId) => (
+                <MediaThumbnail
+                  className='media-preview-image'
+                  familyId={familyId}
+                  fileId={fileId}
+                  key={fileId}
+                />
+              ))}
+            </View>
+          )}
           <Textarea
             className='note-input'
             placeholder='写下此刻想说的话...'
@@ -411,10 +430,23 @@ export default function RecordEdit() {
         </View>
       )}
       <View className='save-area'>
-        <Button className='save-button' loading={submitting} disabled={submitting} onClick={save}>
+        <Button
+          className='save-button'
+          loading={submitting}
+          disabled={submitting || mediaUploading}
+          onClick={save}
+        >
           ✓ 保存记录
         </Button>
       </View>
+      {submitting && (
+        <View className='record-saving-mask'>
+          <View className='record-saving-dialog'>
+            <View className='record-saving-spinner' />
+            <Text>正在保存记录...</Text>
+          </View>
+        </View>
+      )}
     </View>
   )
 }

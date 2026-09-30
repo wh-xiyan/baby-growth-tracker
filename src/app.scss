@@ -1,5 +1,5 @@
-@use './components/common/index.scss';
-@use './components/page-loading/index.scss';
+@use './components/common/index.scss' as common;
+@use './components/page-loading/index.scss' as page-loading;
 
 page {
   --color-page: #fffaf5;

@@ -145,7 +145,6 @@
 }
 .summary-teal .summary-value {
   color: #719b9d;
-  font-size: 18px;
 }
 .timeline-heading {
   display: flex;
@@ -333,6 +332,11 @@
   color: #665d58;
   font-size: 13px;
   line-height: 1.6;
+}
+.note-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .note-image {
   width: 64px;

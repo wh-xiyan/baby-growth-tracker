@@ -1,7 +1,8 @@
 import { Button, Picker, ScrollView, Text, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow, usePullDownRefresh, useUnload } from '@tarojs/taro'
 import { useState } from 'react'
 import { PageLoading } from '../../components/page-loading'
+import { consumeRecordsUpdate, requestHomeRecordsRefresh } from '../../services/records'
 import { useSessionStore } from '../../stores/session'
 import { SummaryCard } from './components/SummaryCard'
 import { Timeline } from './components/Timeline'
@@ -26,6 +27,22 @@ export default function RecordList() {
   const isToday = selectedDate === dateKey(new Date())
   const shortDateLabel = `${selectedDateValue.getFullYear()}年${selectedDateValue.getMonth() + 1}月${selectedDateValue.getDate()}日`
   const weekdayLabel = `星期${'日一二三四五六'[selectedDateValue.getDay()]}${isToday ? ' · 今天' : ''}`
+
+  useDidShow(() => {
+    if (consumeRecordsUpdate()) reload()
+  })
+
+  useUnload(() => {
+    requestHomeRecordsRefresh()
+  })
+
+  usePullDownRefresh(async () => {
+    try {
+      await reload()
+    } finally {
+      Taro.stopPullDownRefresh()
+    }
+  })
 
   return (
     <View className='record-list-page'>
@@ -86,7 +103,7 @@ export default function RecordList() {
             今日记录加载失败，点击重试
           </Button>
         )}
-        {!loading && !error && <Timeline records={records} filter={filter} />}
+        {!loading && !error && <Timeline records={records} filter={filter} familyId={familyId} />}
       </View>
 
       <Button

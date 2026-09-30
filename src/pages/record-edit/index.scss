@@ -255,6 +255,17 @@
   color: #b8a59d;
   font-size: 11px;
 }
+.media-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.media-preview-image {
+  width: 76px;
+  height: 76px;
+  border-radius: 10px;
+}
 .note-input {
   min-height: 78px;
   margin-top: 12px;
@@ -273,4 +284,41 @@
   font-weight: 700;
   line-height: 56px;
   box-shadow: 0 6px 14px rgba(235, 150, 119, 0.22);
+}
+.record-saving-mask {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(77, 64, 59, 0.28);
+}
+.record-saving-dialog {
+  display: flex;
+  min-width: 128px;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 26px;
+  border-radius: 14px;
+  background: rgba(52, 43, 39, 0.86);
+  color: #fff;
+  font-size: 13px;
+}
+.record-saving-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: record-saving-spin 0.8s linear infinite;
+}
+@keyframes record-saving-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

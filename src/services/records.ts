@@ -3,6 +3,24 @@ import type { RecordCategory, RecordMetrics } from '../types/record'
 import { callCloudFunction, isCloudConfigured } from './cloud'
 
 const DEMO_KEY = 'baby-growth-demo-records'
+const UPDATE_KEY = 'baby-growth-records-updated'
+const HOME_REFRESH_KEY = 'baby-growth-home-records-refresh'
+
+export function consumeRecordsUpdate() {
+  const updated = Boolean(Taro.getStorageSync(UPDATE_KEY))
+  if (updated) Taro.removeStorageSync(UPDATE_KEY)
+  return updated
+}
+
+export function requestHomeRecordsRefresh() {
+  Taro.setStorageSync(HOME_REFRESH_KEY, true)
+}
+
+export function consumeHomeRecordsRefresh() {
+  const refresh = Boolean(Taro.getStorageSync(HOME_REFRESH_KEY))
+  if (refresh) Taro.removeStorageSync(HOME_REFRESH_KEY)
+  return refresh
+}
 
 export interface CreateRecordInput {
   familyId: string
@@ -20,17 +38,21 @@ export interface DailyRecord extends CreateRecordInput {
 }
 
 export async function createRecord(input: CreateRecordInput): Promise<{ id: string }> {
-  if (isCloudConfigured())
-    return callCloudFunction<{ id: string }>(
+  if (isCloudConfigured()) {
+    const created = await callCloudFunction<{ id: string }>(
       'createRecord',
       input as unknown as Record<string, unknown>,
     )
+    Taro.setStorageSync(UPDATE_KEY, true)
+    return created
+  }
   const records = (Taro.getStorageSync(DEMO_KEY) || []) as DailyRecord[]
   const id = `demo-record-${Date.now()}`
   Taro.setStorageSync(DEMO_KEY, [
     ...records,
     { ...input, id, mediaFileIds: input.mediaFileIds || [] },
   ])
+  Taro.setStorageSync(UPDATE_KEY, true)
   return { id }
 }
 
