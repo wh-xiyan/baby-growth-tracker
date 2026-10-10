@@ -24,6 +24,7 @@ function App(props: PropsWithChildren) {
           userId: session.user.id,
           familyId: session.family?.id,
           childId: session.currentChildId,
+          currentRole: session.currentRole,
         }),
       )
       .catch((error) => {

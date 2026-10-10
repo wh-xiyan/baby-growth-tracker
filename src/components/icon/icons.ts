@@ -5,6 +5,9 @@ import camera from '../../assets/icons/camera.svg'
 import down from '../../assets/icons/down.svg'
 import config from '../../assets/icons/config.svg'
 import uploadOne from '../../assets/icons/upload-one.svg'
+import plan from '../../assets/icons/plan.svg'
+import calendar from '../../assets/icons/calendar.svg'
+import needle from '../../assets/icons/needle.svg'
 
 export type IconName =
   | 'baby-bottle'
@@ -14,6 +17,9 @@ export type IconName =
   | 'down'
   | 'config'
   | 'upload-one'
+  | 'plan'
+  | 'calendar'
+  | 'needle'
 
 export type IconVariant = 'default' | 'active' | 'muted'
 type IconSource = Partial<Record<IconVariant, string>> & { default: string }
@@ -26,4 +32,7 @@ export const iconSources: Record<IconName, IconSource> = {
   down: { default: down },
   config: { default: config },
   'upload-one': { default: uploadOne },
+  plan: { default: plan },
+  calendar: { default: calendar },
+  needle: { default: needle },
 }

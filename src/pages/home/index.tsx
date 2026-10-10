@@ -1,4 +1,4 @@
-import { Button, Text, View } from '@tarojs/components'
+import { Button, Input, Picker, Text, Textarea, View } from '@tarojs/components'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSessionStore } from '../../stores/session'
@@ -11,7 +11,9 @@ import {
   listDailyRecords,
   type DailyRecord,
 } from '../../services/records'
+import { completeVaccine, consumeVaccineUpdate, listHomeReminders } from '../../services/vaccines'
 import type { RecordMetrics } from '../../types/record'
+import type { HomeReminder } from '../../types/vaccine'
 import { categoryMeta } from '../record-list/constants'
 import './index.scss'
 
@@ -109,11 +111,20 @@ export default function Home() {
   const childId = useSessionStore((state) => state.childId)
   const children = useSessionStore((state) => state.children)
   const initialized = useSessionStore((state) => state.initialized)
+  const currentRole = useSessionStore((state) => state.currentRole)
   const setCurrentChild = useSessionStore((state) => state.setCurrentChild)
   const [sheetVisible, setSheetVisible] = useState(false)
   const [todayRecords, setTodayRecords] = useState<DailyRecord[]>([])
   const [recordsLoading, setRecordsLoading] = useState(true)
   const [recordsError, setRecordsError] = useState(false)
+  const [reminders, setReminders] = useState<HomeReminder[]>([])
+  const [remindersLoading, setRemindersLoading] = useState(true)
+  const [remindersError, setRemindersError] = useState(false)
+  const [completingReminderId, setCompletingReminderId] = useState<string>()
+  const [completionReminder, setCompletionReminder] = useState<HomeReminder>()
+  const [completedDate, setCompletedDate] = useState(todayKey())
+  const [institution, setInstitution] = useState('')
+  const [completionNote, setCompletionNote] = useState('')
   const child = useMemo(
     () => children.find((item) => item.id === childId) || children[0],
     [childId, children],
@@ -139,6 +150,25 @@ export default function Home() {
     }
   }, [childId, familyId, initialized])
 
+  const loadReminders = useCallback(async () => {
+    if (!initialized) return
+    if (!familyId || !childId) {
+      setReminders([])
+      setRemindersLoading(false)
+      return
+    }
+    setRemindersLoading(true)
+    setRemindersError(false)
+    try {
+      setReminders(await listHomeReminders({ familyId, childId, limit: 3 }))
+    } catch (error) {
+      console.error('加载首页待办提醒失败', error)
+      setRemindersError(true)
+    } finally {
+      setRemindersLoading(false)
+    }
+  }, [childId, familyId, initialized])
+
   useEffect(() => {
     if (initialized && !familyId) Taro.navigateTo({ url: '/pages/onboarding/index' })
   }, [familyId, initialized])
@@ -147,17 +177,55 @@ export default function Home() {
     loadTodayRecords()
   }, [loadTodayRecords])
 
+  useEffect(() => {
+    loadReminders()
+  }, [loadReminders])
+
   useDidShow(() => {
     if (consumeRecordsUpdate() || consumeHomeRecordsRefresh()) loadTodayRecords()
+    consumeVaccineUpdate()
+    loadReminders()
   })
 
   usePullDownRefresh(async () => {
     try {
       await loadTodayRecords()
+      await loadReminders()
     } finally {
       Taro.stopPullDownRefresh()
     }
   })
+
+  const openCompletion = (reminder: HomeReminder) => {
+    if (!familyId || currentRole === 'viewer') return
+    setCompletionReminder(reminder)
+    setCompletedDate(todayKey())
+    setInstitution('')
+    setCompletionNote('')
+  }
+
+  const confirmCompletion = async () => {
+    if (!familyId || !completionReminder) return
+    const reminder = completionReminder
+    setCompletingReminderId(reminder.id)
+    try {
+      await completeVaccine({
+        familyId,
+        vaccineId: reminder.id,
+        completedDate,
+        institution: institution.trim() || undefined,
+        note: completionNote.trim() || undefined,
+      })
+      Taro.showToast({ title: '已标记接种', icon: 'success' })
+      await loadReminders()
+      setCompletionReminder(undefined)
+    } catch (error) {
+      console.error('完成疫苗接种失败', error)
+      Taro.showToast({ title: '操作失败，请重试', icon: 'none' })
+    } finally {
+      setCompletingReminderId(undefined)
+    }
+  }
 
   const navigateRecord = (category?: string) => {
     setSheetVisible(false)
@@ -283,10 +351,57 @@ export default function Home() {
         <View className='home-section'>
           <View className='section-heading'>
             <Text>待办提醒</Text>
+            <Button onClick={() => Taro.navigateTo({ url: '/pages/vaccine/index' })}>
+              查看全部
+            </Button>
           </View>
-          <View className='todo-empty'>
-            <Text>暂无待办事项</Text>
-          </View>
+          {remindersLoading && <View className='todo-empty'>正在加载待办提醒...</View>}
+          {!remindersLoading && remindersError && (
+            <Button className='todo-state-button' onClick={loadReminders}>
+              待办加载失败，点击重试
+            </Button>
+          )}
+          {!remindersLoading && !remindersError && !reminders.length && (
+            <View className='todo-empty'>暂无待办事项</View>
+          )}
+          {!remindersLoading && !remindersError && reminders.length > 0 && (
+            <View className='todo-list'>
+              {reminders.map((reminder) => (
+                <View className='todo-card' key={reminder.id}>
+                  <View
+                    className={`todo-icon todo-icon-${reminder.urgency}`}
+                    onClick={() => Taro.navigateTo({ url: '/pages/vaccine/index' })}
+                  >
+                    疫
+                  </View>
+                  <View
+                    className='todo-content'
+                    onClick={() => Taro.navigateTo({ url: '/pages/vaccine/index' })}
+                  >
+                    <View className='todo-title-row'>
+                      <Text className='todo-title'>
+                        {reminder.vaccineName}
+                        {reminder.doseNumber ? ` · 第 ${reminder.doseNumber} 针` : ''}
+                      </Text>
+                      <Text className={`todo-status todo-status-${reminder.urgency}`}>
+                        {reminder.relativeLabel}
+                      </Text>
+                    </View>
+                    <Text className='todo-date'>建议接种：{reminder.plannedDate}</Text>
+                  </View>
+                  {currentRole !== 'viewer' && (
+                    <Button
+                      className='todo-complete'
+                      loading={completingReminderId === reminder.id}
+                      onClick={() => openCompletion(reminder)}
+                    >
+                      已接种
+                    </Button>
+                  )}
+                </View>
+              ))}
+            </View>
+          )}
         </View>
         <View className='home-section'>
           <View className='section-heading'>
@@ -364,6 +479,60 @@ export default function Home() {
                   <Icon name='camera' size={24} color='#459DA1' />
                 </View>
                 <Text>记录瞬间</Text>
+              </Button>
+            </View>
+          </View>
+        </View>
+      )}
+      {completionReminder && (
+        <View className='completion-mask' onClick={() => setCompletionReminder(undefined)}>
+          <View className='completion-sheet' onClick={(event) => event.stopPropagation()}>
+            <View className='completion-heading'>标记已接种</View>
+            <Text className='completion-vaccine'>
+              {completionReminder.vaccineName}
+              {completionReminder.doseNumber ? ` · 第 ${completionReminder.doseNumber} 针` : ''}
+            </Text>
+            <View className='completion-field'>
+              <Text>实际接种日期</Text>
+              <Picker
+                mode='date'
+                value={completedDate}
+                onChange={(event) => setCompletedDate(event.detail.value)}
+              >
+                <View className='completion-picker'>{completedDate}</View>
+              </Picker>
+            </View>
+            <View className='completion-field'>
+              <Text>接种机构（选填）</Text>
+              <Input
+                className='completion-input'
+                placeholder='例如：社区卫生服务中心'
+                value={institution}
+                onInput={(event) => setInstitution(event.detail.value)}
+              />
+            </View>
+            <View className='completion-field'>
+              <Text>备注（选填）</Text>
+              <Textarea
+                className='completion-textarea'
+                placeholder='补充接种信息'
+                value={completionNote}
+                onInput={(event) => setCompletionNote(event.detail.value)}
+              />
+            </View>
+            <View className='completion-actions'>
+              <Button
+                className='completion-cancel'
+                onClick={() => setCompletionReminder(undefined)}
+              >
+                取消
+              </Button>
+              <Button
+                className='completion-confirm'
+                loading={Boolean(completingReminderId)}
+                onClick={confirmCompletion}
+              >
+                确认完成
               </Button>
             </View>
           </View>

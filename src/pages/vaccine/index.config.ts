@@ -1,1 +1,5 @@
-export default definePageConfig({ navigationBarTitleText: '疫苗' })
+export default definePageConfig({
+  navigationBarTitleText: '疫苗计划',
+  enablePullDownRefresh: true,
+  backgroundTextStyle: 'dark',
+})

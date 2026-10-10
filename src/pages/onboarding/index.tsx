@@ -43,6 +43,7 @@ export default function Onboarding() {
         userId: session.user.id,
         familyId: session.family?.id,
         childId: session.currentChildId,
+        currentRole: session.currentRole,
       })
       Taro.showToast({ title: session.isDemo ? '已创建本地演示档案' : '创建成功', icon: 'none' })
       setTimeout(() => Taro.switchTab({ url: '/pages/home/index' }), 500)

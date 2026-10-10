@@ -1,6 +1,6 @@
 import Taro from '@tarojs/taro'
 import type { Child } from '../types/child'
-import type { Family, User } from '../types/family'
+import type { Family, FamilyRole, User } from '../types/family'
 import { callCloudFunction, isCloudConfigured } from './cloud'
 
 export interface BootstrapResult {
@@ -8,6 +8,7 @@ export interface BootstrapResult {
   family?: Family
   children: Child[]
   currentChildId?: string
+  currentRole?: FamilyRole
   isDemo: boolean
 }
 
@@ -71,6 +72,7 @@ export async function createFamilyAndChild(
     family,
     children: [createdChild],
     currentChildId: createdChild.id,
+    currentRole: 'owner',
     isDemo: true,
   }
   Taro.setStorageSync(DEMO_KEY, result)

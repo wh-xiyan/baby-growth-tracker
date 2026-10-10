@@ -25,6 +25,9 @@ export async function main() {
       ).data
     : []
   const family = families[0]
+  const membership = memberships.data.find(
+    (item: Record<string, any>) => item.familyId === family?._id,
+  )
   const children = family
     ? (
         await db
@@ -39,6 +42,7 @@ export async function main() {
     family: family && { id: family._id, name: family.name, ownerId: family.ownerId },
     children: children.map((child: Record<string, any>) => ({ ...child, id: child._id })),
     currentChildId: children[0]?._id,
+    currentRole: membership?.role,
     isDemo: false,
   })
 }

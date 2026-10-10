@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { Child } from '../types/child'
-import type { Family, User } from '../types/family'
+import type { Family, FamilyRole, User } from '../types/family'
 
 interface SessionState {
   user?: User
@@ -9,6 +9,7 @@ interface SessionState {
   userId?: string
   familyId?: string
   childId?: string
+  currentRole?: FamilyRole
   initialized: boolean
   setInitialized: (initialized: boolean) => void
   setSession: (session: Partial<SessionState>) => void
@@ -29,6 +30,7 @@ export const useSessionStore = create<SessionState>((set) => ({
       userId: undefined,
       familyId: undefined,
       childId: undefined,
+      currentRole: undefined,
       initialized: false,
     }),
 }))

@@ -1,0 +1,7 @@
+{
+  "name": "create-vaccine-series",
+  "private": true,
+  "dependencies": {
+    "wx-server-sdk": "3.0.3"
+  }
+}
