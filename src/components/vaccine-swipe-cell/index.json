@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "van-swipe-cell": "../../vendor/vant/swipe-cell/index"
+  }
+}

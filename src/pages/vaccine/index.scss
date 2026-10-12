@@ -302,46 +302,11 @@
   min-height: 0;
   flex: 1;
 }
-.vaccine-swipe-row {
-  position: relative;
+.vaccine-list-card {
+  display: block;
   overflow: hidden;
   margin-bottom: 10px;
   border-radius: var(--radius-card);
-}
-.vaccine-swipe-actions {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  width: 148px;
-}
-.vaccine-swipe-actions Button {
-  width: 74px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  color: #fff;
-  font-size: 13px;
-}
-.vaccine-swipe-actions Button::after {
-  border: 0;
-}
-.vaccine-action-edit {
-  background: #d7a75b;
-}
-.vaccine-action-delete {
-  background: #d96b54;
-}
-.vaccine-swipe-row .vaccine-card {
-  position: relative;
-  z-index: 1;
-  margin-bottom: 0;
-  transition: transform 0.2s ease;
-}
-.vaccine-swipe-row.open .vaccine-card {
-  transform: translateX(-148px);
 }
 .vaccine-card {
   display: flex;

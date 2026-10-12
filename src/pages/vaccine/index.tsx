@@ -67,10 +67,7 @@ export default function Vaccine() {
   const [institution, setInstitution] = useState('')
   const [creating, setCreating] = useState(false)
   const [completingId, setCompletingId] = useState<string>()
-  const [swipedVaccineId, setSwipedVaccineId] = useState<string>()
-  const [touchStartX, setTouchStartX] = useState(0)
-  const [touchStartY, setTouchStartY] = useState(0)
-  const [listScrollEnabled, setListScrollEnabled] = useState(true)
+  const [deletingId, setDeletingId] = useState<string>()
   const [editingVaccine, setEditingVaccine] = useState<Vaccine>()
   const [editPlannedDate, setEditPlannedDate] = useState(todayKey())
   const [editPaymentType, setEditPaymentType] = useState<VaccinePaymentType>('free')
@@ -259,7 +256,6 @@ export default function Vaccine() {
   const canEdit = currentRole !== 'viewer'
   const openEdit = (vaccine: Vaccine) => {
     if (vaccine.status !== 'planned') return
-    setSwipedVaccineId(undefined)
     setEditingVaccine(vaccine)
     setEditPlannedDate(vaccine.plannedDate.slice(0, 10))
     setEditPaymentType(vaccine.paymentType || 'free')
@@ -294,9 +290,9 @@ export default function Vaccine() {
 
   const deletePlan = async (vaccine: Vaccine, force = false) => {
     if (!familyId) return
+    setDeletingId(vaccine.id)
     try {
       await deleteVaccinePlan({ familyId, vaccineId: vaccine.id, force })
-      setSwipedVaccineId(undefined)
       Taro.showToast({ title: '计划已删除', icon: 'success' })
       await loadVaccines()
     } catch (reason) {
@@ -312,7 +308,27 @@ export default function Vaccine() {
       }
       console.error('删除疫苗计划失败', reason)
       Taro.showToast({ title: '已接种计划不可删除', icon: 'none' })
+    } finally {
+      setDeletingId(undefined)
     }
+  }
+  const requestDeletePlan = async (vaccine: Vaccine) => {
+    if (!familyId || deletingId) return
+    const hasLaterPlannedDose = vaccines.some(
+      (item) =>
+        item.catalogId === vaccine.catalogId &&
+        Number(item.doseNumber) > Number(vaccine.doseNumber) &&
+        item.status === 'planned',
+    )
+    const confirmed = await Taro.showModal({
+      title: hasLaterPlannedDose ? '确认删除此针计划？' : '删除疫苗计划？',
+      content: hasLaterPlannedDose
+        ? `后续仍有未接种的第 ${Number(vaccine.doseNumber) + 1} 针及后续计划。删除后接种顺序会不完整。`
+        : '删除后无法恢复，确认删除吗？',
+      confirmText: hasLaterPlannedDose ? '仍要删除' : '删除',
+      confirmColor: '#D96B54',
+    })
+    if (confirmed.confirm) await deletePlan(vaccine, hasLaterPlannedDose)
   }
   const showVaccineNote = (note: string) => {
     void Taro.showModal({
@@ -322,6 +338,55 @@ export default function Vaccine() {
       confirmText: '知道了',
     })
   }
+  const renderVaccineCard = (vaccine: Vaccine) => (
+    <View className='vaccine-card'>
+      <View className='vaccine-card-title-row'>
+        <View className={`vaccine-card-icon vaccine-card-icon-${vaccine.status}`}>
+          <Icon name='needle' size={17} />
+        </View>
+        <Text className='vaccine-card-title'>{vaccine.name}</Text>
+        {canEdit && vaccine.status === 'planned' ? (
+          <Button
+            className='vaccine-complete vaccine-complete-planned'
+            loading={completingId === vaccine.id}
+            onClick={() => markCompleted(vaccine)}
+          >
+            待接种
+          </Button>
+        ) : (
+          <Text className={`vaccine-card-status vaccine-card-status-${vaccine.status}`}>
+            {statusLabel[vaccine.status]}
+          </Text>
+        )}
+      </View>
+      <View className='vaccine-card-content'>
+        <View className='vaccine-card-meta'>
+          <Text className='vaccine-dose-label'>＃ 第{vaccine.doseNumber || 1}针</Text>
+          <View className='vaccine-meta-item'>
+            <Icon name='plan' size={24} />
+            <Text>{vaccine.plannedDate.slice(0, 10)}</Text>
+          </View>
+          <Text className={`vaccine-payment-tag vaccine-payment-${vaccine.paymentType || 'free'}`}>
+            {vaccine.paymentType === 'self_paid' ? '自费' : '免费'}
+          </Text>
+        </View>
+        {vaccine.status === 'completed' && vaccine.completedDate && (
+          <View className='vaccine-card-actual'>
+            <Icon name='calendar' size={24} />
+            <Text>已接种时间：{vaccine.completedDate.slice(0, 10)}</Text>
+          </View>
+        )}
+        {vaccine.paymentType === 'self_paid' && vaccine.selfPaidVaccineNote && (
+          <Text
+            className='vaccine-card-note'
+            onClick={() => showVaccineNote(vaccine.selfPaidVaccineNote || '')}
+          >
+            备注：{vaccine.selfPaidVaccineNote}
+          </Text>
+        )}
+      </View>
+    </View>
+  )
   return (
     <View className='vaccine-page'>
       <PageLoading visible={loading} />
@@ -532,7 +597,7 @@ export default function Vaccine() {
         </View>
       )}
 
-      <ScrollView className='vaccine-list-scroll' scrollY={listScrollEnabled}>
+      <ScrollView className='vaccine-list-scroll' scrollY>
         {!loading && error && (
           <Button className='vaccine-state vaccine-state-button' onClick={loadVaccines}>
             疫苗计划加载失败，点击重试
@@ -543,93 +608,21 @@ export default function Vaccine() {
         )}
         {!loading && !error && vaccines.length > 0 && (
           <View className='vaccine-list'>
-            {vaccines.map((vaccine) => (
-              <View
-                className={`vaccine-swipe-row ${swipedVaccineId === vaccine.id ? 'open' : ''}`}
-                key={vaccine.id}
-                onTouchStart={(event) => {
-                  setTouchStartX(event.touches[0]?.pageX || 0)
-                  setTouchStartY(event.touches[0]?.pageY || 0)
-                  setListScrollEnabled(true)
-                }}
-                onTouchMove={(event) => {
-                  const point = event.touches[0]
-                  const horizontalDistance = Math.abs((point?.pageX || touchStartX) - touchStartX)
-                  const verticalDistance = Math.abs((point?.pageY || touchStartY) - touchStartY)
-                  if (horizontalDistance > 10 && horizontalDistance > verticalDistance) {
-                    event.stopPropagation()
-                    setListScrollEnabled(false)
-                  }
-                }}
-                onTouchEnd={(event) => {
-                  const offset = (event.changedTouches[0]?.pageX || 0) - touchStartX
-                  if (offset < -36) setSwipedVaccineId(vaccine.id)
-                  if (offset > 36) setSwipedVaccineId(undefined)
-                  setListScrollEnabled(true)
-                }}
-                onTouchCancel={() => setListScrollEnabled(true)}
-              >
-                {canEdit && vaccine.status === 'planned' && (
-                  <View className='vaccine-swipe-actions'>
-                    <Button className='vaccine-action-edit' onClick={() => openEdit(vaccine)}>
-                      编辑
-                    </Button>
-                    <Button className='vaccine-action-delete' onClick={() => deletePlan(vaccine)}>
-                      删除
-                    </Button>
-                  </View>
-                )}
-                <View className='vaccine-card'>
-                  <View className='vaccine-card-title-row'>
-                    <View className={`vaccine-card-icon vaccine-card-icon-${vaccine.status}`}>
-                      <Icon name='needle' size={17} />
-                    </View>
-                    <Text className='vaccine-card-title'>{vaccine.name}</Text>
-                    {canEdit && vaccine.status === 'planned' ? (
-                      <Button
-                        className='vaccine-complete vaccine-complete-planned'
-                        loading={completingId === vaccine.id}
-                        onClick={() => markCompleted(vaccine)}
-                      >
-                        待接种
-                      </Button>
-                    ) : (
-                      <Text className={`vaccine-card-status vaccine-card-status-${vaccine.status}`}>
-                        {statusLabel[vaccine.status]}
-                      </Text>
-                    )}
-                  </View>
-                  <View className='vaccine-card-content'>
-                    <View className='vaccine-card-meta'>
-                      <Text className='vaccine-dose-label'>＃ 第{vaccine.doseNumber || 1}针</Text>
-                      <View className='vaccine-meta-item'>
-                        <Icon name='plan' size={24} />
-                        <Text>{vaccine.plannedDate.slice(0, 10)}</Text>
-                      </View>
-                      <Text
-                        className={`vaccine-payment-tag vaccine-payment-${vaccine.paymentType || 'free'}`}
-                      >
-                        {vaccine.paymentType === 'self_paid' ? '自费' : '免费'}
-                      </Text>
-                    </View>
-                    {vaccine.status === 'completed' && vaccine.completedDate && (
-                      <View className='vaccine-card-actual'>
-                        <Icon name='calendar' size={24} />
-                        <Text>已接种时间：{vaccine.completedDate.slice(0, 10)}</Text>
-                      </View>
-                    )}
-                    {vaccine.paymentType === 'self_paid' && vaccine.selfPaidVaccineNote && (
-                      <Text
-                        className='vaccine-card-note'
-                        onClick={() => showVaccineNote(vaccine.selfPaidVaccineNote || '')}
-                      >
-                        备注：{vaccine.selfPaidVaccineNote}
-                      </Text>
-                    )}
-                  </View>
+            {vaccines.map((vaccine) =>
+              canEdit && vaccine.status === 'planned' ? (
+                <vaccine-swipe-cell
+                  key={vaccine.id}
+                  onEdit={() => openEdit(vaccine)}
+                  onDelete={() => requestDeletePlan(vaccine)}
+                >
+                  {renderVaccineCard(vaccine)}
+                </vaccine-swipe-cell>
+              ) : (
+                <View className='vaccine-list-card' key={vaccine.id}>
+                  {renderVaccineCard(vaccine)}
                 </View>
-              </View>
-            ))}
+              ),
+            )}
           </View>
         )}
       </ScrollView>

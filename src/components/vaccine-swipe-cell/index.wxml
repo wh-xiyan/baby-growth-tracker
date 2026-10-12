@@ -1,0 +1,9 @@
+<view class="vaccine-swipe-cell">
+  <van-swipe-cell right-width="148">
+    <view slot="right" class="vaccine-swipe-actions">
+      <button class="vaccine-swipe-action vaccine-swipe-action-edit" bindtap="handleEdit">编辑</button>
+      <button class="vaccine-swipe-action vaccine-swipe-action-delete" bindtap="handleDelete">删除</button>
+    </view>
+    <slot />
+  </van-swipe-cell>
+</view>

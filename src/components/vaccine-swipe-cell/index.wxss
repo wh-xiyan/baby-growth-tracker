@@ -1,0 +1,35 @@
+.vaccine-swipe-cell {
+  display: block;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border-radius: 14px;
+}
+
+.vaccine-swipe-actions {
+  display: flex;
+  width: 148px;
+  height: 100%;
+}
+
+.vaccine-swipe-action {
+  width: 74px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #fff;
+  font-size: 13px;
+}
+
+.vaccine-swipe-action::after {
+  border: 0;
+}
+
+.vaccine-swipe-action-edit {
+  background: #d7a75b;
+}
+
+.vaccine-swipe-action-delete {
+  background: #d96b54;
+}
