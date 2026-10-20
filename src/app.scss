@@ -2,21 +2,21 @@
 @use './components/page-loading/index.scss' as page-loading;
 
 page {
-  --color-page: #fffaf5;
+  --color-page: #f7f5ec;
   --color-surface: #fff;
-  --color-ink: #403b39;
-  --color-body: #665d58;
-  --color-muted: #a49b95;
-  --color-primary: #e79576;
-  --color-primary-deep: #c96f59;
-  --color-pale-pink: #fff0eb;
-  --color-pale-blue: #dff3f4;
-  --color-pale-yellow: #fff0bf;
-  --color-line: #eee4df;
+  --color-ink: #334238;
+  --color-body: #526358;
+  --color-muted: #6b7a70;
+  --color-primary: #7fa68a;
+  --color-primary-deep: #547960;
+  --color-pale-pink: #eaf1ea;
+  --color-pale-blue: #e7f0f2;
+  --color-pale-yellow: #faf3df;
+  --color-line: #e5e9df;
   --radius-card: 18px;
   --radius-input: 11px;
   --radius-button: 13px;
-  --shadow-card: 0 8px 24px rgba(188, 135, 108, 0.1);
+  --shadow-card: 0 8px 24px rgba(51, 66, 56, 0.06);
   background: var(--color-page);
   color: var(--color-body);
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -88,4 +88,10 @@ page {
 }
 .cell:last-child {
   border-bottom: 0;
+}
+
+.detail-media-image {
+  width: 280px;
+  height: 220px;
+  border-radius: 12px;
 }

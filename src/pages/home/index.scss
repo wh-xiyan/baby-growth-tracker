@@ -216,7 +216,7 @@
   border: 0;
   border-radius: var(--radius-button);
   background: var(--color-primary);
-  box-shadow: 0 7px 14px rgba(231, 149, 118, 0.2);
+  box-shadow: 0 7px 14px rgba(127, 166, 138, 0.16);
   color: #fff;
   font-size: 15px;
   font-weight: 600;
@@ -763,4 +763,337 @@
   50% {
     transform: rotate(8deg);
   }
+}
+
+.home-content {
+  padding: 16px 20px 28px;
+  gap: 24px;
+}
+.home-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-ink);
+  font-size: 18px;
+  font-weight: 600;
+}
+.child-card {
+  position: relative;
+  background: #eaf1ea;
+  box-shadow: none;
+}
+.child-card-body {
+  position: relative;
+  z-index: 1;
+  padding: 20px 16px;
+}
+.child-info {
+  gap: 8px;
+}
+.child-name-row {
+  flex-wrap: wrap;
+}
+.child-name {
+  font-size: 20px;
+}
+.age-badge {
+  font-size: 12px;
+  color: var(--color-primary-deep);
+  background: #fff;
+  border-radius: 16px;
+  padding: 3px 6px;
+}
+.child-avatar-wrap,
+.child-avatar-image {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  flex: none;
+}
+.child-avatar {
+  width: 52px;
+  height: 52px;
+  font-size: 22px;
+  box-shadow: none;
+}
+.growth-tree {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 96px;
+  height: 110px;
+  opacity: 0.45;
+}
+.switch-child {
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #fff;
+  border-radius: 14px;
+  font-size: 12px;
+}
+.readonly-notice {
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--color-pale-blue);
+  font-size: 13px;
+
+  button {
+    margin: 8px 0 0;
+    padding: 0 12px;
+    min-height: 36px;
+    line-height: 36px;
+    font-size: 13px;
+    color: var(--color-primary);
+    background: #fff;
+    border-radius: 8px;
+  }
+}
+.section-heading {
+  padding: 0;
+  font-size: 16px;
+  border-left: 3px solid var(--color-primary);
+  padding-left: 8px;
+}
+.care-grid {
+  display: flex;
+  gap: 10px;
+}
+.care-card {
+  width: 0;
+  flex: 1;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  background: #fff;
+  border-radius: 16px;
+  margin: 0;
+  line-height: 1.5;
+  text-align: left;
+}
+.care-summary::after,
+.care-action::after,
+.measurement-tile::after,
+.vaccine-actions button::after,
+.measurement-add::after,
+.baby-choice::after {
+  border: 0;
+}
+.care-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-pale-pink);
+}
+.care-sleep .care-icon {
+  background: var(--color-pale-blue);
+}
+.care-diaper .care-icon {
+  background: var(--color-pale-yellow);
+}
+.care-label,
+.care-caption {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.care-value {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.care-summary {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  line-height: 1.5;
+  text-align: left;
+}
+.care-action {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  line-height: 1.8;
+  text-align: left;
+  font-size: 12px;
+  color: var(--color-primary-deep);
+  border-top: 1px solid var(--color-line);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+.quick-card {
+  height: 76px;
+  font-size: 13px;
+  box-shadow: none;
+}
+.vaccine-card,
+.measurement-card {
+  padding: 16px;
+  border-radius: 18px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.vaccine-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.todo-status {
+  font-size: 12px;
+}
+.vaccine-caption {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.vaccine-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--color-line);
+  padding-top: 12px;
+}
+.vaccine-actions button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-primary-deep);
+  font-size: 12px;
+  line-height: 32px;
+}
+.vaccine-actions .todo-complete {
+  width: auto;
+  padding: 0 12px;
+  border-radius: 16px;
+  background: var(--color-primary);
+  color: #fff;
+  height: 32px;
+}
+.measurement-grid {
+  display: flex;
+  gap: 10px;
+}
+.measurement-tile {
+  width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  background: #f2f6f2;
+  padding: 12px;
+  margin: 0;
+  line-height: 1.4;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+.measurement-tile:nth-child(2) {
+  background: #faf3df;
+}
+.measurement-tile.selected {
+  border-color: var(--color-primary);
+}
+.measurement-value {
+  color: var(--color-ink);
+  font-size: 21px;
+  font-weight: 600;
+}
+.measurement-add {
+  margin: 0;
+  padding: 10px 0 0;
+  color: var(--color-primary-deep);
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: right;
+  border-top: 1px solid var(--color-line);
+}
+.chart-empty {
+  padding: 24px 8px;
+  text-align: center;
+  font-size: 13px;
+}
+.milestone-image {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+}
+.milestone-images {
+  flex: none;
+}
+.activity-card {
+  box-shadow: none;
+}
+.activity-time {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.primary-button {
+  margin: 0;
+  box-shadow: none;
+}
+.baby-choice {
+  font-size: 15px;
+  padding: 12px;
+  margin: 12px 0 0;
+  background: #f7f5ec;
+  color: var(--color-ink);
+  text-align: left;
+  border-radius: 12px;
+}
+.baby-choice.active {
+  background: var(--color-pale-pink);
+  color: var(--color-primary-deep);
+}
+
+.record-scene-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.record-scene-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 16px;
+  background: #fff;
+  border-radius: 16px;
+  line-height: 1.5;
+  text-align: left;
+}
+.record-scene-card::after {
+  border: 0;
+}
+.scene-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+.scene-title {
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+.scene-detail {
+  color: var(--color-muted);
+  font-size: 13px;
 }

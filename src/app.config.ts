@@ -7,6 +7,8 @@ export default defineAppConfig({
     'pages/onboarding/index',
     'pages/record-edit/index',
     'pages/record-list/index',
+    'pages/care-detail/index',
+    'pages/vaccine-detail/index',
     'pages/record-detail/index',
     'pages/vaccine/index',
     'pages/family/index',
@@ -15,13 +17,13 @@ export default defineAppConfig({
   ],
   window: {
     backgroundTextStyle: 'light',
-    navigationBarBackgroundColor: '#fff',
+    navigationBarBackgroundColor: '#f7f5ec',
     navigationBarTitleText: '宝宝成长录',
     navigationBarTextStyle: 'black',
   },
   tabBar: {
     color: '#6b7280',
-    selectedColor: '#2563eb',
+    selectedColor: '#7fa68a',
     backgroundColor: '#ffffff',
     borderStyle: 'black',
     list: [

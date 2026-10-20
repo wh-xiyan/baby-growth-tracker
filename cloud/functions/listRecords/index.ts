@@ -19,5 +19,11 @@ export async function main(event: {
     .skip(event.skip || 0)
     .limit(Math.min(event.limit || 20, 100))
     .get()
-  return result(records.data.map((item: Record<string, any>) => ({ ...item, id: item._id })))
+  return result(
+    records.data.map((item: Record<string, any>) => ({
+      ...item,
+      id: item._id,
+      occurredAt: new Date(item.occurredAt).toISOString(),
+    })),
+  )
 }

@@ -1,0 +1,40 @@
+.vaccine-detail-page {
+  padding: 36px 28px;
+  min-height: 100vh;
+  background: #f7f5ec;
+  color: #36463b;
+  .detail-title {
+    font-size: 40px;
+    font-weight: 700;
+  }
+  .detail-subtitle {
+    margin-top: 16px;
+    color: #718075;
+    font-size: 26px;
+  }
+  .detail-card {
+    margin: 32px 0;
+    padding: 12px 28px;
+    background: #fff;
+    border-radius: 28px;
+  }
+  .detail-field {
+    padding: 24px 0;
+    border-bottom: 1px solid #f0f2ec;
+    font-size: 28px;
+    word-break: break-all;
+  }
+  .detail-field:last-child {
+    border-bottom: 0;
+  }
+  .detail-label {
+    display: block;
+    margin-bottom: 12px;
+    color: #718075;
+    font-size: 24px;
+  }
+  .detail-state {
+    padding: 40px 0;
+    color: #718075;
+  }
+}

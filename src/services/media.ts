@@ -49,7 +49,11 @@ export async function uploadMediaAsset(input: {
   const file = chosen.tempFiles[0]
   if (!file) throw new Error('MEDIA_NOT_SELECTED')
   const fileType = file.fileType === 'video' ? 'video' : 'image'
-  if (!isCloudConfigured()) return { fileId: file.tempFilePath, fileType }
+  if (!isCloudConfigured()) {
+    const items = Taro.getStorageSync('baby-growth-demo-media') || {}
+    Taro.setStorageSync('baby-growth-demo-media', { ...items, [file.tempFilePath]: fileType })
+    return { fileId: file.tempFilePath, fileType }
+  }
   const uploaded = await Taro.cloud.uploadFile({
     cloudPath: `media/${input.familyId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     filePath: file.tempFilePath,

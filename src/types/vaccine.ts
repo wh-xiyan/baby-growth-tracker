@@ -67,5 +67,6 @@ export interface HomeReminder {
   doseNumber?: number
   plannedDate: string
   urgency: ReminderUrgency
+  institution?: string
   relativeLabel: string
 }

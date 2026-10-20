@@ -1,3 +1,4 @@
+import { ownedDocument } from '../../shared/records'
 import { db, now, context, activeMember, result } from '../../shared/db'
 export async function main(event: { familyId?: string; recordId?: string }) {
   const openid = context()
@@ -5,6 +6,7 @@ export async function main(event: { familyId?: string; recordId?: string }) {
   const member = await activeMember(familyId, openid)
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
   if (!event.recordId) throw new Error('INVALID_RECORD')
+  await ownedDocument('growth_records', event.recordId, familyId)
   await db
     .collection('growth_records')
     .doc(event.recordId)

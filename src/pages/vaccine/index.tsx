@@ -237,7 +237,7 @@ export default function Vaccine() {
       title: '标记已接种',
       content: `确认已完成“${vaccine.name}${vaccine.doseNumber ? ` 第 ${vaccine.doseNumber} 针` : ''}”吗？`,
       confirmText: '确认完成',
-      confirmColor: '#E79576',
+      confirmColor: '#7FA68A',
     })
     if (!confirmed.confirm) return
     setCompletingId(vaccine.id)
@@ -344,7 +344,16 @@ export default function Vaccine() {
         <View className={`vaccine-card-icon vaccine-card-icon-${vaccine.status}`}>
           <Icon name='needle' size={17} />
         </View>
-        <Text className='vaccine-card-title'>{vaccine.name}</Text>
+        <Text
+          className='vaccine-card-title'
+          onClick={() =>
+            Taro.navigateTo({
+              url: `/pages/vaccine-detail/index?id=${encodeURIComponent(vaccine.id)}`,
+            })
+          }
+        >
+          {vaccine.name} ›
+        </Text>
         {canEdit && vaccine.status === 'planned' ? (
           <Button
             className='vaccine-complete vaccine-complete-planned'

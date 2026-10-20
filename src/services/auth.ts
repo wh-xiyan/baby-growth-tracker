@@ -28,7 +28,12 @@ export async function bootstrapSession(): Promise<BootstrapResult> {
     await Taro.login()
     return callCloudFunction<BootstrapResult>('login')
   }
-  return Taro.getStorageSync(DEMO_KEY) || createDemoSession()
+  const session: BootstrapResult = Taro.getStorageSync(DEMO_KEY) || createDemoSession()
+  if (!session.currentRole && session.family?.ownerId === session.user.id) {
+    session.currentRole = 'owner'
+    Taro.setStorageSync(DEMO_KEY, session)
+  }
+  return session
 }
 
 export async function createFamilyAndChild(
@@ -48,6 +53,7 @@ export async function createFamilyAndChild(
       family,
       children: [createdChild],
       currentChildId: createdChild.id,
+      currentRole: 'owner',
       isDemo: false,
     }
   }

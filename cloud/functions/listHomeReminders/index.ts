@@ -24,19 +24,20 @@ export async function main(event: { familyId?: string; childId?: string; limit?:
   await activeMember(familyId, context())
   const todayKey = dateKey(new Date())
   const today = startOfDay(todayKey)
-  const end = new Date(today.getTime() + 8 * 86400000)
   const limit = Math.min(Math.max(Number(event.limit) || 3, 1), 10)
-  const vaccines = await db
-    .collection('vaccines')
-    .where({
-      familyId,
-      childId,
-      status: 'planned',
-      plannedDate: db.command.lt(end),
-    })
-    .orderBy('plannedDate', 'asc')
-    .get()
-  const reminders = vaccines.data
+  const rows: Record<string, any>[] = []
+  while (true) {
+    const page = await db
+      .collection('vaccines')
+      .where({ familyId, childId, status: 'planned' })
+      .orderBy('plannedDate', 'asc')
+      .skip(rows.length)
+      .limit(100)
+      .get()
+    rows.push(...page.data)
+    if (page.data.length < 100) break
+  }
+  const reminders = rows
     .map((item: Record<string, any>) => {
       const plannedKey = dateKey(new Date(item.plannedDate))
       const distance = Math.round((startOfDay(plannedKey).getTime() - today.getTime()) / 86400000)
@@ -46,6 +47,7 @@ export async function main(event: { familyId?: string; childId?: string; limit?:
         type: 'vaccination' as const,
         vaccineName: item.name,
         doseNumber: item.doseNumber,
+        institution: item.institution,
         plannedDate: plannedKey,
         urgency,
         relativeLabel:

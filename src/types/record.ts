@@ -5,6 +5,7 @@ export type RecordCategory =
   | 'diaper'
   | 'health'
   | 'vaccination'
+  | 'measurement'
   | 'milestone'
   | 'school'
   | 'study'

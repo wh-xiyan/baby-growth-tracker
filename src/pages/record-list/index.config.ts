@@ -1,5 +1,5 @@
 export default definePageConfig({
-  navigationBarTitleText: '今日记录',
+  navigationBarTitleText: '照护记录',
   enablePullDownRefresh: true,
   backgroundTextStyle: 'dark',
 })

@@ -1,0 +1,18 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const html=fs.readFileSync('prototypes/care-records/vaccine-detail.html','utf8');
+const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];new vm.Script(script);
+const nodes=new Map();const $=s=>{if(!nodes.has(s))nodes.set(s,{value:'',textContent:'',innerHTML:'',hidden:false,open:false,showModal(){this.open=true},close(){this.open=false}});return nodes.get(s)};
+const ctx=vm.createContext({document:{querySelector:$,createElement:()=>({remove(){}}),body:{appendChild(){}}},window:{scrollTo(){}},setTimeout(){}});const run=s=>vm.runInContext(s,ctx);run(script);
+assert.ok($('#content').innerHTML.includes('还有 8 天'));
+run("switchState('overdue')");assert.ok($('#content').innerHTML.includes('3 天'));
+run("switchState('today')");assert.ok($('#content').innerHTML.includes('今天是计划接种日'));
+run('setViewer(true);openEdit()');assert.equal($('#edit-dialog').open,false);assert.ok(!$('#dock').innerHTML.includes('调整计划'));
+run("setViewer(false);switchState('planned');openEdit()");assert.equal($('#edit-dialog').open,true);
+$('#edit-date').value='';run('savePlan()');assert.ok($('#edit-error').textContent);
+$('#edit-date').value='2026-10-29';$('#edit-institution').value='<社区>';$('#edit-payment').value='free';run('savePlan()');assert.equal(run('vaccine.plannedDate'),'2026-10-29');assert.ok($('#content').innerHTML.includes('&lt;社区&gt;'));assert.ok(!$('#content').innerHTML.includes('具体费用'));
+run('openComplete()');$('#completed-date').value='2026-10-21';run('completeDose()');assert.equal(run('vaccine.status'),'planned');assert.ok($('#complete-error').textContent);
+$('#completed-date').value='2026-10-20';$('#completed-note').value='已核对';run('completeDose()');assert.equal(run('vaccine.status'),'completed');assert.ok($('#content').innerHTML.includes('实际接种日期'));assert.ok(!$('#dock').innerHTML.includes('调整计划'));
+run('openPlans()');assert.ok($('#dose-list').innerHTML.includes('当前查看'));run("selectDose('dose-1')");assert.equal(run('vaccine.doseNumber'),1);
+run("switchState('error')");assert.equal($('#dock').hidden,true);run('retry()');assert.equal($('#dock').hidden,false);
+run("switchState('skipped')");assert.ok($('#content').innerHTML.includes('已跳过'));assert.ok(!$('#content').innerHTML.includes('尚未接种'));
+console.log('PASS: script syntax, pending/today/overdue/completed/skipped states, read-only actions, plan editing, completion validation, escaping, dose navigation and retry');

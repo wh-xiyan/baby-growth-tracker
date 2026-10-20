@@ -109,7 +109,6 @@ const dayDistance = (plannedDate: string) => {
 function reminderOf(vaccine: Vaccine): HomeReminder | undefined {
   if (vaccine.status !== 'planned') return undefined
   const distance = dayDistance(vaccine.plannedDate)
-  if (distance > 7) return undefined
   const urgency: ReminderUrgency = distance < 0 ? 'overdue' : distance === 0 ? 'today' : 'upcoming'
   const relativeLabel =
     distance < 0
@@ -121,6 +120,7 @@ function reminderOf(vaccine: Vaccine): HomeReminder | undefined {
     id: vaccine.id,
     type: 'vaccination',
     vaccineName: vaccine.name,
+    institution: vaccine.institution,
     doseNumber: vaccine.doseNumber,
     plannedDate: vaccine.plannedDate,
     urgency,
@@ -165,6 +165,19 @@ export async function listVaccines(input: {
     .filter((item) => item.familyId === input.familyId && item.childId === input.childId)
     .map(normalizeVaccine)
     .sort((left, right) => left.plannedDate.localeCompare(right.plannedDate))
+}
+
+export async function getVaccine(input: {
+  familyId: string
+  childId: string
+  vaccineId: string
+}): Promise<Vaccine> {
+  if (isCloudConfigured())
+    return normalizeVaccine(await callCloudFunction<Vaccine>('getVaccine', input))
+  const vaccines = await listVaccines(input)
+  const vaccine = vaccines.find((item) => item.id === input.vaccineId)
+  if (!vaccine) throw new Error('VACCINE_NOT_FOUND')
+  return vaccine
 }
 
 export async function listHomeReminders(input: {

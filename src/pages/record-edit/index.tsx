@@ -8,17 +8,17 @@ import { Icon } from '../../components/icon'
 import type { IconName } from '../../components/icon'
 import { MediaThumbnail } from '../../components/media/MediaThumbnail'
 import type { FeedingType, RecordCategory } from '../../types/record'
+import {
+  recordScenes,
+  recordForms,
+  resolveRecordEntry,
+  type RecordForm,
+} from '../../utils/record-flow'
 import './index.scss'
 
-type MainTab = 'feeding' | 'sleep' | 'milestone' | 'note'
+type MainTab = RecordForm
 type FeedingTab = FeedingType
 
-const mainTabs: Array<{ value: MainTab; label: string; icon: IconName }> = [
-  { value: 'feeding', label: '喂养', icon: 'baby-bottle' },
-  { value: 'sleep', label: '睡眠', icon: 'moon' },
-  { value: 'milestone', label: '成长', icon: 'sapling' },
-  { value: 'note', label: '瞬间', icon: 'camera' },
-]
 const feedingTabs: Array<{ value: FeedingTab; label: string }> = [
   { value: 'breastfeeding', label: '母乳' },
   { value: 'formula', label: '配方奶' },
@@ -57,11 +57,14 @@ export default function RecordEdit() {
   const router = useRouter()
   const familyId = useSessionStore((state) => state.familyId)
   const childId = useSessionStore((state) => state.childId)
-  const initialTab = router.params.category as MainTab
-  const [mainTab, setMainTab] = useState<MainTab>(
-    mainTabs.some((item) => item.value === initialTab) ? initialTab : 'feeding',
+  const entry = resolveRecordEntry(router.params.category, router.params.scene)
+  const currentRole = useSessionStore((state) => state.currentRole)
+  const scene = entry.scene
+  const [mainTab, setMainTab] = useState<MainTab | undefined>(entry.form)
+  const canEdit = currentRole === 'owner' || currentRole === 'adult'
+  const [feedingTab, setFeedingTab] = useState<FeedingTab>(
+    router.params.category === 'solid_food' ? 'solid_food' : 'breastfeeding',
   )
-  const [feedingTab, setFeedingTab] = useState<FeedingTab>('breastfeeding')
   const [time, setTime] = useState(currentTime())
   const [side, setSide] = useState<'left' | 'right'>('left')
   const [duration, setDuration] = useState('15')
@@ -71,25 +74,52 @@ export default function RecordEdit() {
   const [allergy, setAllergy] = useState('')
   const [sleepStart, setSleepStart] = useState('13:20')
   const [sleepEnd, setSleepEnd] = useState('15:05')
-  const [height, setHeight] = useState('72.5')
-  const [weight, setWeight] = useState('9.2')
+  const [height, setHeight] = useState('')
+  const [weight, setWeight] = useState('')
+  const [milestoneTitle, setMilestoneTitle] = useState('')
+  const [temperature, setTemperature] = useState('')
+  const [healthType, setHealthType] = useState<'temperature' | 'symptom' | 'medicine' | 'visit'>(
+    'symptom',
+  )
+  const [date, setDate] = useState(
+    router.params.date && /^\d{4}-\d{2}-\d{2}$/.test(router.params.date)
+      ? router.params.date
+      : currentDate(),
+  )
   const [content, setContent] = useState('')
   const [mediaFileIds, setMediaFileIds] = useState<string[]>([])
   const [mediaUploading, setMediaUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const dateLabel = useMemo(() => {
-    const date = new Date()
-    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 · 星期${'日一二三四五六'[date.getDay()]}`
-  }, [])
+  const dateLabel = `${date.replace(/-/g, '/')} · 记录宝宝的今天`
   const sleepDurationLabel = useMemo(
     () => formatSleepDuration(sleepDurationMinutes(sleepStart, sleepEnd)),
     [sleepEnd, sleepStart],
   )
 
   const save = async () => {
-    if (submitting || mediaUploading) return
+    if (submitting || mediaUploading || !mainTab) return
     if (!familyId || !childId) {
       Taro.showToast({ title: '请先完成宝宝档案', icon: 'none' })
+      return
+    }
+    if (currentRole !== 'owner' && currentRole !== 'adult') {
+      Taro.showToast({ title: '只读成员无法新增记录', icon: 'none' })
+      return
+    }
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+      Taro.showToast({ title: '请输入有效时间', icon: 'none' })
+      return
+    }
+    if (['milestone', 'study', 'travel'].includes(mainTab) && !milestoneTitle.trim()) {
+      Taro.showToast({ title: '请填写新发现', icon: 'none' })
+      return
+    }
+    if (mainTab === 'measurement' && !(Number(height) > 0 || Number(weight) > 0)) {
+      Taro.showToast({ title: '请填写身高或体重', icon: 'none' })
+      return
+    }
+    if (mainTab === 'health' && healthType === 'temperature' && !(Number(temperature) > 0)) {
+      Taro.showToast({ title: '请填写体温', icon: 'none' })
       return
     }
     setSubmitting(true)
@@ -98,7 +128,7 @@ export default function RecordEdit() {
       let title = '成长记录'
       let metrics: Record<string, string | number | undefined> = {}
       if (mainTab === 'feeding') {
-        category = 'feeding'
+        category = feedingTab === 'solid_food' ? 'solid_food' : 'feeding'
         title =
           feedingTab === 'breastfeeding'
             ? '母乳喂养'
@@ -121,13 +151,32 @@ export default function RecordEdit() {
       } else if (mainTab === 'sleep') {
         title = '睡眠记录'
         metrics = {
-          sleepStart,
-          sleepEnd,
+          sleepStart: `${date}T${sleepStart}:00+08:00`,
+          sleepEnd: `${sleepEnd > sleepStart ? date : new Date(new Date(`${date}T12:00:00Z`).getTime() + 86400000).toISOString().slice(0, 10)}T${sleepEnd}:00+08:00`,
           sleepDurationMinutes: sleepDurationMinutes(sleepStart, sleepEnd),
         }
-      } else if (mainTab === 'milestone') {
-        title = '成长记录'
+      } else if (mainTab === 'measurement') {
+        title = '身体测量'
         metrics = { height: toNumber(height), weight: toNumber(weight) }
+      } else if (mainTab === 'milestone') {
+        title = milestoneTitle.trim()
+      } else if (mainTab === 'health') {
+        title =
+          healthType === 'temperature'
+            ? '体温记录'
+            : healthType === 'medicine'
+              ? '用药记录'
+              : healthType === 'visit'
+                ? '就医记录'
+                : '症状记录'
+        metrics = {
+          healthType,
+          ...(healthType === 'temperature' ? { temperature: toNumber(temperature) } : {}),
+        }
+      } else if (mainTab === 'diaper') {
+        title = '排便记录'
+      } else if (mainTab === 'study' || mainTab === 'travel') {
+        title = milestoneTitle.trim()
       } else {
         category = 'note'
         title = '成长瞬间'
@@ -137,7 +186,7 @@ export default function RecordEdit() {
         childId,
         category,
         title,
-        occurredAt: `${currentDate()}T${time}:00.000Z`,
+        occurredAt: `${date}T${time}:00+08:00`,
         content,
         metrics,
         mediaFileIds,
@@ -172,6 +221,46 @@ export default function RecordEdit() {
     }
   }
 
+  const selectedScene = recordScenes.find((item) => item.value === scene)
+  const selectedForm = recordForms.find((item) => item.value === mainTab)
+  if (!mainTab)
+    return (
+      <View className='record-edit-page'>
+        <View className='record-title'>
+          {scene ? `选择${selectedScene?.label}类别` : '今天想记录什么？'}
+        </View>
+        <View className='record-date'>
+          {scene ? '选择类别后填写记录' : '先选择记录类型，再选择具体类别'}
+        </View>
+        <View className='flow-options'>
+          {(scene ? recordForms.filter((item) => item.scene === scene) : recordScenes).map(
+            (item) => (
+              <Button
+                key={item.value}
+                className='flow-option'
+                disabled={!canEdit}
+                onClick={() => {
+                  const query = scene ? `category=${item.value}` : `scene=${item.value}`
+                  Taro.navigateTo({
+                    url: `/pages/record-edit/index?${query}&date=${date}`,
+                  })
+                }}
+              >
+                <Icon name={item.icon} size={26} color='#7FA68A' />
+                <View className='flow-option-copy'>
+                  <Text className='flow-option-title'>{item.label}</Text>
+                  <Text className='flow-option-description'>{item.description}</Text>
+                </View>
+                <Text className='flow-option-arrow'>›</Text>
+              </Button>
+            ),
+          )}
+        </View>
+        {!canEdit && (
+          <View className='flow-readonly'>您当前没有新增记录权限，可以返回查看记录。</View>
+        )}
+      </View>
+    )
   return (
     <View className='record-edit-page'>
       <View className='record-topbar'>
@@ -179,28 +268,31 @@ export default function RecordEdit() {
           ‹
         </Button> */}
         <View className='record-heading'>
-          <View className='record-title'>记录今天</View>
+          <View className='record-title'>记录{selectedForm?.label}</View>
+          <View className='record-date'>
+            {selectedScene?.label} / {selectedForm?.label}
+          </View>
+          <Button
+            className='flow-back'
+            disabled={submitting || mediaUploading}
+            onClick={() => setMainTab(undefined)}
+          >
+            更换类别
+          </Button>
           <View className='record-date'>{dateLabel}</View>
         </View>
         {/* <View className='calendar-mark'>□</View> */}
       </View>
-      <View className='main-tabs'>
-        {mainTabs.map((tab) => (
-          <Button
-            key={tab.value}
-            className={`main-tab ${mainTab === tab.value ? 'active' : ''}`}
-            onClick={() => setMainTab(tab.value)}
-          >
-            <Icon
-              className='tab-icon'
-              name={tab.icon}
-              size={16}
-              color={mainTab === tab.value ? '#E79576' : '#8D7E77'}
-            />
-            <Text>{tab.label}</Text>
-          </Button>
-        ))}
-      </View>
+      <Field label='记录日期'>
+        <Picker
+          mode='date'
+          value={date}
+          end={currentDate()}
+          onChange={(event) => setDate(event.detail.value)}
+        >
+          <View className='picker-field'>{date}</View>
+        </Picker>
+      </Field>
       {mainTab === 'feeding' && (
         <View className='record-card'>
           <CardTitle
@@ -366,9 +458,9 @@ export default function RecordEdit() {
           </Field>
         </View>
       )}
-      {mainTab === 'milestone' && (
+      {mainTab === 'measurement' && (
         <View className='record-card'>
-          <CardTitle title='成长记录' icon='sapling' hint='身体数据' />
+          <CardTitle title='身体测量' icon='sapling' hint='身体数据' />
           <View className='time-grid'>
             <Field label='身高' suffix='cm'>
               <Input
@@ -387,14 +479,66 @@ export default function RecordEdit() {
               />
             </Field>
           </View>
-          <Field label='成长里程碑'>
-            <Input
-              className='field-input'
-              placeholder='今天第一次自己站起来啦'
+        </View>
+      )}
+      {(mainTab === 'health' ||
+        mainTab === 'diaper' ||
+        mainTab === 'milestone' ||
+        mainTab === 'study' ||
+        mainTab === 'travel') && (
+        <View className='record-card'>
+          <CardTitle title={`${selectedForm?.label}记录`} icon='sapling' hint='留下今天' />
+          {mainTab === 'health' && (
+            <>
+              <Segment<'temperature' | 'symptom' | 'medicine' | 'visit'>
+                value={healthType}
+                options={[
+                  ['temperature', '体温'],
+                  ['symptom', '症状'],
+                  ['medicine', '用药'],
+                  ['visit', '就医'],
+                ]}
+                onChange={setHealthType}
+              />
+              {healthType === 'temperature' && (
+                <Field label='体温' suffix='℃'>
+                  <Input
+                    className='field-input'
+                    type='digit'
+                    value={temperature}
+                    onInput={(event) => setTemperature(event.detail.value)}
+                  />
+                </Field>
+              )}
+            </>
+          )}
+          {['milestone', 'study', 'travel'].includes(mainTab) && (
+            <Field label={mainTab === 'travel' ? '旅行名称或地点' : '学会了什么'}>
+              <Input
+                className='field-input'
+                placeholder='例如：第一次自己穿鞋'
+                value={milestoneTitle}
+                onInput={(event) => setMilestoneTitle(event.detail.value)}
+              />
+            </Field>
+          )}
+          <Field label={mainTab === 'health' ? '症状、用药或就医详情' : '补充描述'}>
+            <Textarea
+              className='note-input'
               value={content}
               onInput={(event) => setContent(event.detail.value)}
             />
           </Field>
+          {['milestone', 'study', 'travel'].includes(mainTab) && (
+            <Button
+              className='media-placeholder'
+              loading={mediaUploading}
+              disabled={mediaUploading || submitting}
+              onClick={chooseMedia}
+            >
+              添加照片或视频（已添加 {mediaFileIds.length} 个）
+            </Button>
+          )}
         </View>
       )}
       {mainTab === 'note' && (
@@ -406,7 +550,7 @@ export default function RecordEdit() {
             loading={mediaUploading}
             onClick={chooseMedia}
           >
-            <Icon name='upload-one' size={28} color='#E79576' />
+            <Icon name='upload-one' size={28} color='#7FA68A' />
             <Text>{mediaFileIds.length ? '继续添加图片或视频' : '添加一张图片或视频'}</Text>
           </Button>
           {mediaFileIds.length > 0 && familyId && (
@@ -433,7 +577,7 @@ export default function RecordEdit() {
         <Button
           className='save-button'
           loading={submitting}
-          disabled={submitting || mediaUploading}
+          disabled={submitting || mediaUploading || !canEdit}
           onClick={save}
         >
           ✓ 保存记录
@@ -455,7 +599,7 @@ function CardTitle({ title, icon, hint }: { title: string; icon?: IconName; hint
   return (
     <View className='card-title-row'>
       <View className='card-title-copy'>
-        {icon && <Icon name={icon} size={18} color='#E79576' />}
+        {icon && <Icon name={icon} size={18} color='#7FA68A' />}
         <Text className='card-title'>{title}</Text>
       </View>
       <Text className='card-hint'>{hint}</Text>

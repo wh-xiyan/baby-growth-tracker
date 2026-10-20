@@ -1,4 +1,7 @@
 import Taro from '@tarojs/taro'
+import { localDate } from '../utils/home'
+import { validRange } from '../utils/care-records'
+import { useSessionStore } from '../stores/session'
 import type { RecordCategory, RecordMetrics } from '../types/record'
 import { callCloudFunction, isCloudConfigured } from './cloud'
 
@@ -35,6 +38,9 @@ export interface CreateRecordInput {
 
 export interface DailyRecord extends CreateRecordInput {
   id: string
+  createdBy?: string
+  authorName?: string
+  media?: Array<{ fileId: string; fileType: string }>
 }
 
 export async function createRecord(input: CreateRecordInput): Promise<{ id: string }> {
@@ -50,7 +56,12 @@ export async function createRecord(input: CreateRecordInput): Promise<{ id: stri
   const id = `demo-record-${Date.now()}`
   Taro.setStorageSync(DEMO_KEY, [
     ...records,
-    { ...input, id, mediaFileIds: input.mediaFileIds || [] },
+    {
+      ...input,
+      id,
+      createdBy: useSessionStore.getState().userId,
+      mediaFileIds: input.mediaFileIds || [],
+    },
   ])
   Taro.setStorageSync(UPDATE_KEY, true)
   return { id }
@@ -59,16 +70,80 @@ export async function createRecord(input: CreateRecordInput): Promise<{ id: stri
 export async function listDailyRecords(input: {
   familyId: string
   childId: string
-  date: string
+  date?: string
+  startDate?: string
+  endDate?: string
   category?: RecordCategory
 }): Promise<DailyRecord[]> {
-  if (isCloudConfigured()) return callCloudFunction<DailyRecord[]>('listDailyRecords', input)
+  const startDate = input.startDate || input.date || localDate()
+  const endDate = input.endDate || input.date || startDate
+  if (!validRange(startDate, endDate)) throw new Error('INVALID_DAILY_RECORD_QUERY')
+  if (isCloudConfigured())
+    return callCloudFunction<DailyRecord[]>('listDailyRecords', { ...input, startDate, endDate })
+  const session = useSessionStore.getState()
   const records = (Taro.getStorageSync(DEMO_KEY) || []) as DailyRecord[]
-  return records.filter(
-    (record) =>
-      record.occurredAt.slice(0, 10) === input.date &&
-      record.familyId === input.familyId &&
-      record.childId === input.childId &&
-      (!input.category || record.category === input.category),
+  return records
+    .filter(
+      (record) =>
+        localDate(record.occurredAt) >= startDate &&
+        localDate(record.occurredAt) <= endDate &&
+        record.familyId === input.familyId &&
+        record.childId === input.childId &&
+        (!input.category ||
+          record.category === input.category ||
+          (input.category === 'feeding' && record.category === 'solid_food')),
+    )
+    .map((record) => ({
+      ...record,
+      authorName:
+        record.createdBy === session.userId
+          ? session.user?.nickname || '我'
+          : record.authorName || '家庭成员',
+    }))
+}
+
+export async function listRecords(input: {
+  familyId: string
+  childId: string
+  category?: RecordCategory
+  limit?: number
+  skip?: number
+}): Promise<DailyRecord[]> {
+  if (isCloudConfigured()) return callCloudFunction<DailyRecord[]>('listRecords', input)
+  return ((Taro.getStorageSync(DEMO_KEY) || []) as DailyRecord[])
+    .filter(
+      (record) =>
+        record.familyId === input.familyId &&
+        record.childId === input.childId &&
+        (!input.category || record.category === input.category),
+    )
+    .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
+    .slice(input.skip || 0, (input.skip || 0) + (input.limit || 20))
+}
+
+export async function getRecord(input: {
+  familyId: string
+  childId: string
+  recordId: string
+}): Promise<DailyRecord> {
+  if (isCloudConfigured()) return callCloudFunction<DailyRecord>('getRecord', input)
+  const record = ((Taro.getStorageSync(DEMO_KEY) || []) as DailyRecord[]).find(
+    (item) =>
+      item.id === input.recordId &&
+      item.familyId === input.familyId &&
+      item.childId === input.childId,
   )
+  if (!record) throw new Error('NOT_FOUND')
+  const session = useSessionStore.getState()
+  return {
+    ...record,
+    authorName:
+      record.createdBy === session.userId
+        ? session.user?.nickname || '我'
+        : record.authorName || '家庭成员',
+    media: (record.mediaFileIds || []).map((fileId) => ({
+      fileId,
+      fileType: (Taro.getStorageSync('baby-growth-demo-media') || {})[fileId] || 'image',
+    })),
+  }
 }

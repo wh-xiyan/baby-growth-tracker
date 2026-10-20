@@ -1,3 +1,4 @@
+import { validateRecord, validateRecordMedia } from '../../shared/records'
 import { db, now, context, activeMember, result } from '../../shared/db'
 export async function main(event: Record<string, unknown>) {
   const openid = context()
@@ -13,17 +14,14 @@ export async function main(event: Record<string, unknown>) {
     .limit(1)
     .get()
   if (!child.data[0]) throw new Error('CHILD_NOT_FOUND')
+  const validated = validateRecord(event)
+  await validateRecordMedia(familyId, String(event.childId), validated.mediaFileIds)
   const timestamp = now()
   const created = await db.collection('growth_records').add({
     data: {
       familyId,
       childId: event.childId,
-      category: event.category,
-      title: String(event.title).trim(),
-      occurredAt: event.occurredAt,
-      content: event.content ? String(event.content) : '',
-      metrics: event.metrics || {},
-      mediaFileIds: Array.isArray(event.mediaFileIds) ? event.mediaFileIds : [],
+      ...validated,
       createdBy: member.userId,
       createdAt: timestamp,
       updatedAt: timestamp,

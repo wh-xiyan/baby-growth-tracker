@@ -1,52 +1,66 @@
 import { db, context, activeMember, result } from '../../shared/db'
+import { recordAuthors } from '../../shared/record-authors'
+import { queryRange } from '../../shared/record-range'
 
 export async function main(event: {
   familyId?: string
   childId?: string
   date?: string
+  startDate?: string
+  endDate?: string
   category?: string
 }) {
   const openid = context()
   const familyId = String(event?.familyId || '')
   const childId = String(event?.childId || '')
-  const date = String(event?.date || '')
-  if (!familyId || !childId || !/^\d{4}-\d{2}-\d{2}$/.test(date))
-    throw new Error('INVALID_DAILY_RECORD_QUERY')
+  if (!familyId || !childId) throw new Error('INVALID_DAILY_RECORD_QUERY')
   await activeMember(familyId, openid)
-  const start = new Date(`${date}T00:00:00.000Z`)
-  const end = new Date(start.getTime() + 86400000)
+  const { start, end } = queryRange(event)
   const baseWhere: Record<string, unknown> = {
     familyId,
     childId,
     deletedAt: db.command.exists(false),
   }
-  if (event.category) baseWhere.category = event.category
+  if (event.category)
+    baseWhere.category =
+      event.category === 'feeding' ? db.command.in(['feeding', 'solid_food']) : event.category
 
   // Older records were written with an ISO string while the schema describes
   // occurredAt as a Date. Query both representations during the migration.
-  const stringStart = `${date}T00:00:00.000Z`
-  const stringEnd = `${date}T23:59:59.999Z`
+  const stringStart = start.toISOString()
+  const stringEnd = new Date(end.getTime() - 1).toISOString()
+  const queryAll = async (occurredAt: unknown) => {
+    const rows: Record<string, any>[] = []
+    while (true) {
+      const page = await db
+        .collection('growth_records')
+        .where({ ...baseWhere, occurredAt })
+        .orderBy('occurredAt', 'asc')
+        .skip(rows.length)
+        .limit(100)
+        .get()
+      rows.push(...page.data)
+      if (page.data.length < 100) return rows
+    }
+  }
   const [dateRecords, stringRecords] = await Promise.all([
-    db
-      .collection('growth_records')
-      .where({ ...baseWhere, occurredAt: db.command.gte(start).and(db.command.lt(end)) })
-      .orderBy('occurredAt', 'asc')
-      .get(),
-    db
-      .collection('growth_records')
-      .where({
-        ...baseWhere,
-        occurredAt: db.command.gte(stringStart).and(db.command.lte(stringEnd)),
-      })
-      .orderBy('occurredAt', 'asc')
-      .get(),
+    queryAll(db.command.gte(start).and(db.command.lt(end))),
+    queryAll(db.command.gte(stringStart).and(db.command.lte(stringEnd))),
   ])
   const uniqueRecords = new Map<string, Record<string, any>>()
-  for (const item of [...dateRecords.data, ...stringRecords.data]) {
+  for (const item of [...dateRecords, ...stringRecords]) {
     uniqueRecords.set(item._id, item)
   }
-  const records = [...uniqueRecords.values()].sort((left, right) =>
-    String(left.occurredAt).localeCompare(String(right.occurredAt)),
+  const records = [...uniqueRecords.values()].sort(
+    (left, right) => new Date(left.occurredAt).getTime() - new Date(right.occurredAt).getTime(),
   )
-  return result(records.map((item) => ({ ...item, id: item._id })))
+  const authors = await recordAuthors(familyId, records)
+  return result(
+    records.map((item) => ({
+      ...item,
+      id: item._id,
+      authorName: authors.get(item.createdBy) || '家庭成员',
+      occurredAt: new Date(item.occurredAt).toISOString(),
+    })),
+  )
 }

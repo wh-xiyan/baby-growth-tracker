@@ -1,162 +1,105 @@
 import { Button, Text, View } from '@tarojs/components'
-import { useMemo, useState } from 'react'
-import { Icon } from '../../../components/icon'
-import { MediaThumbnails } from '../../../components/media/MediaThumbnail'
+import { useState } from 'react'
+import Taro from '@tarojs/taro'
 import type { DailyRecord } from '../../../services/records'
-import type { RecordMetrics } from '../../../types/record'
-import { categoryMeta, type Filter } from '../constants'
-import { durationLabel, timeOf } from '../utils'
+import {
+  careMetrics,
+  careTitle,
+  careValue,
+  groupCare,
+  type CareCategory,
+} from '../../../utils/care-records'
+import { localDate, localTime } from '../../../utils/home'
 
 export function Timeline({
   records,
-  filter,
-  familyId,
+  queryKey,
+  category,
 }: {
   records: DailyRecord[]
-  filter: Filter
-  familyId?: string
+  queryKey: string
+  category: CareCategory
 }) {
-  const [expandedId, setExpandedId] = useState<string>()
-  const filteredRecords = useMemo(
-    () =>
-      records
-        .filter((record) => filter === 'all' || record.category === filter)
-        .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)),
-    [filter, records],
-  )
-
-  if (!filteredRecords.length) {
+  const groups = groupCare(records)
+  const [expansion, setExpansion] = useState<{ query: string; dates: Record<string, boolean> }>({
+    query: '',
+    dates: {},
+  })
+  const dates = expansion.query === queryKey ? expansion.dates : { [groups[0]?.[0] || '']: true }
+  const toggle = (date: string) =>
+    setExpansion({ query: queryKey, dates: { ...dates, [date]: !dates[date] } })
+  const toggleAll = (open: boolean) =>
+    setExpansion({
+      query: queryKey,
+      dates: Object.fromEntries(groups.map(([date]) => [date, open])),
+    })
+  if (!groups.length)
     return (
-      <View className='empty-state'>
-        <View className='empty-state-icon'>□</View>
-        <Text className='empty-state-title'>今天还没有这类记录</Text>
-        <Text className='empty-state-caption'>点击下方按钮，记录宝宝的每个小瞬间</Text>
+      <View className='care-empty'>
+        <Text className='care-empty-title'>这段时间还没有这类记录</Text>
+        <Text>试试扩大日期范围，或留下第一条记录。</Text>
       </View>
     )
-  }
-
   return (
-    <View className='timeline'>
-      <View className='timeline-line' />
-      {filteredRecords.map((record) => (
-        <RecordItem
-          key={record.id}
-          record={record}
-          familyId={familyId}
-          expanded={expandedId === record.id}
-          onToggle={() => setExpandedId(expandedId === record.id ? undefined : record.id)}
-        />
+    <View className='care-groups'>
+      {groups.length > 1 && (
+        <View className='care-group-tools'>
+          <Text>
+            {groups.length}个记录日 · {records.length}条记录
+          </Text>
+          <View>
+            <Button onClick={() => toggleAll(true)}>全部展开</Button>
+            <Button onClick={() => toggleAll(false)}>全部收起</Button>
+          </View>
+        </View>
+      )}
+      {groups.map(([date, rows]) => (
+        <View className='care-date-group' key={date}>
+          <Button className='care-date-heading' onClick={() => toggle(date)}>
+            <View className='care-date-copy'>
+              <Text className='care-date-title'>
+                {date.slice(5).replace('-', '月')}日{date === localDate() ? ' · 今天' : ''}
+              </Text>
+              <Text className='care-date-brief'>
+                {careMetrics(rows, category)
+                  .map((m) => `${m.label} ${m.value}`)
+                  .join(' · ')}
+              </Text>
+            </View>
+            <Text className='care-date-toggle'>
+              {rows.length}条　{dates[date] ? '收起 ⌃' : '展开 ⌄'}
+            </Text>
+          </Button>
+          {dates[date] && (
+            <View className='care-records'>
+              {rows.map((record) => (
+                <Button
+                  className='care-record-row'
+                  key={record.id}
+                  onClick={() =>
+                    Taro.navigateTo({
+                      url: `/pages/record-detail/index?id=${encodeURIComponent(record.id)}`,
+                    })
+                  }
+                >
+                  <Text className='care-record-time'>{localTime(record.occurredAt)}</Text>
+                  <View className='care-record-body'>
+                    <Text className='care-record-title'>{careTitle(record)}</Text>
+                    {careValue(record) && (
+                      <Text className='care-record-value'>{careValue(record)}</Text>
+                    )}
+                    <Text className='care-record-caption'>
+                      {record.metrics?.foods || record.content || '日常照护'} ·{' '}
+                      {record.authorName || '家庭成员'}记录
+                    </Text>
+                  </View>
+                  <Text className='care-record-arrow'>›</Text>
+                </Button>
+              ))}
+            </View>
+          )}
+        </View>
       ))}
     </View>
   )
-}
-
-function RecordItem({
-  record,
-  familyId,
-  expanded,
-  onToggle,
-}: {
-  record: DailyRecord
-  familyId?: string
-  expanded: boolean
-  onToggle: () => void
-}) {
-  const meta = categoryMeta[record.category] || categoryMeta.note
-  const metrics = record.metrics || {}
-
-  return (
-    <View className='timeline-item'>
-      <View className='timeline-icon' style={{ backgroundColor: meta.background }}>
-        <Icon name={meta.icon} size={20} color={meta.tone} />
-      </View>
-      <View className='record-item-card'>
-        <View className='record-item-heading'>
-          <View className='record-item-title-group'>
-            <Text className='record-item-title'>{meta.label}</Text>
-            {record.category === 'feeding' && (
-              <Text className='record-tag'>{feedingLabel(metrics)}</Text>
-            )}
-          </View>
-          <Text className='record-item-time'>{timeOf(record)}</Text>
-        </View>
-        {record.category === 'feeding' && <FeedingContent metrics={metrics} />}
-        {record.category === 'sleep' && <SleepContent metrics={metrics} />}
-        {record.category === 'milestone' && <GrowthContent record={record} metrics={metrics} />}
-        {record.category === 'note' && (
-          <View className='note-content'>
-            {familyId && (
-              <MediaThumbnails
-                className='note-image'
-                containerClassName='note-images'
-                familyId={familyId}
-                fileIds={record.mediaFileIds || []}
-              />
-            )}
-            {record.content && <Text>{record.content}</Text>}
-          </View>
-        )}
-        {(record.category === 'feeding' || record.category === 'sleep') && (
-          <>
-            <Button className='detail-toggle' onClick={onToggle}>
-              <Text>查看详情</Text>
-              <Text>{expanded ? '⌃' : '⌄'}</Text>
-            </Button>
-            {expanded && (
-              <Text className='record-detail'>{record.content || detailText(record)}</Text>
-            )}
-          </>
-        )}
-      </View>
-    </View>
-  )
-}
-
-function feedingLabel(metrics: RecordMetrics) {
-  if (metrics.feedingType === 'formula') return '奶粉'
-  if (metrics.feedingType === 'solid_food') return '辅食'
-  return '母乳'
-}
-
-function FeedingContent({ metrics }: { metrics: RecordMetrics }) {
-  return (
-    <View className='record-main-value'>
-      <Text>{metrics.amount ?? metrics.durationMinutes ?? '--'}</Text>
-      <Text className='record-unit'>{metrics.unit || (metrics.durationMinutes ? '分钟' : '')}</Text>
-    </View>
-  )
-}
-
-function SleepContent({ metrics }: { metrics: RecordMetrics }) {
-  return (
-    <View className='sleep-value'>
-      <Text>{durationLabel(metrics.sleepDurationMinutes)}</Text>
-      <Text className='record-tag sleep-tag'>小睡</Text>
-    </View>
-  )
-}
-
-function GrowthContent({ record, metrics }: { record: DailyRecord; metrics: RecordMetrics }) {
-  return (
-    <View className='growth-content'>
-      <View className='growth-metrics'>
-        <Text>
-          {metrics.height ?? '--'}
-          <Text className='metric-unit'> cm</Text>
-        </Text>
-        <Text>
-          {metrics.weight ?? '--'}
-          <Text className='metric-unit'> kg</Text>
-        </Text>
-      </View>
-      {record.content && <Text className='growth-note'>{record.content}</Text>}
-    </View>
-  )
-}
-
-function detailText(record: DailyRecord) {
-  if (record.category === 'sleep') {
-    return `入睡 ${record.metrics?.sleepStart || '--:--'} · 醒来 ${record.metrics?.sleepEnd || '--:--'}`
-  }
-  return '暂无更多详情'
 }

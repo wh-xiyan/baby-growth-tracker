@@ -1,4 +1,4 @@
-import { Image, View } from '@tarojs/components'
+import { Image, Video, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useState } from 'react'
 import { resolveMediaUrl, resolveMediaUrls } from '../../services/media'
@@ -7,10 +7,12 @@ export function MediaThumbnail({
   familyId,
   fileId,
   className,
+  fileType,
 }: {
   familyId: string
   fileId?: string
   className: string
+  fileType?: string
 }) {
   const [url, setUrl] = useState<string>()
 
@@ -36,6 +38,7 @@ export function MediaThumbnail({
   }, [familyId, fileId])
 
   if (!url) return null
+  if (fileType === 'video') return <Video className={className} src={url} controls />
   return (
     <Image
       className={className}

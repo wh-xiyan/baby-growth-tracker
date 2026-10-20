@@ -2,7 +2,7 @@
   min-height: 100vh;
   box-sizing: border-box;
   padding: 30px 20px 28px;
-  background: #fffaf5;
+  background: #f7f5ec;
   position: relative;
   overflow: hidden;
   color: #3d3b3a;
@@ -16,7 +16,7 @@
 .spot-yellow {
   width: 180px;
   height: 180px;
-  background: #fff0bf;
+  background: #faf3df;
   top: -85px;
   right: -48px;
 }
@@ -50,7 +50,7 @@
   font-weight: 700;
   line-height: 1.28;
   margin-top: 8px;
-  color: #403b39;
+  color: #334238;
 }
 .welcome-subtitle {
   color: #8e8580;
@@ -189,13 +189,13 @@
   color: #514a46;
 }
 .label-icon {
-  color: #e79576;
+  color: #7fa68a;
   margin-right: 6px;
   font-size: 17px;
 }
 .form-input {
   box-sizing: border-box;
-  border: 1px solid #eee4df;
+  border: 1px solid #e5e9df;
   background: #fffdfc;
   border-radius: 11px;
   min-height: 44px;
@@ -227,7 +227,7 @@
   gap: 10px;
 }
 .gender-option {
-  border: 1px solid #eee4df;
+  border: 1px solid #e5e9df;
   background: #fffdfc;
   border-radius: 12px;
   height: 59px;
@@ -261,7 +261,7 @@
 }
 .gender-male .gender-symbol {
   color: #55aeba;
-  background: #dff3f4;
+  background: #e7f0f2;
 }
 .gender-female .gender-symbol {
   color: #e88f79;
@@ -291,7 +291,7 @@
   display: flex;
   align-items: center;
   margin: 19px 1px 15px;
-  color: #a49b95;
+  color: #6b7a70;
   font-size: 11px;
   line-height: 18px;
 }
@@ -316,7 +316,7 @@
   color: #d98268;
 }
 .create-button {
-  background: #e79576 !important;
+  background: #7fa68a !important;
   border: 0 !important;
   border-radius: 13px !important;
   color: #fff !important;
@@ -325,7 +325,7 @@
   display: block;
   height: 47px !important;
   line-height: 47px !important;
-  box-shadow: 0 7px 14px rgba(231, 149, 118, 0.2);
+  box-shadow: 0 7px 14px rgba(127, 166, 138, 0.16);
   width: 100%;
 }
 .button-arrow {
@@ -341,7 +341,7 @@
 }
 .onboarding-loading {
   min-height: 100vh;
-  background: #fffaf5;
+  background: #f7f5ec;
   display: flex;
   flex-direction: column;
   align-items: center;

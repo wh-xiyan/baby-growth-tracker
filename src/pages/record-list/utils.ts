@@ -1,3 +1,4 @@
+import { localTime } from '../../utils/home'
 import type { DailyRecord } from '../../services/records'
 
 export const dateKey = (date: Date) =>
@@ -12,7 +13,7 @@ export const dateLabel = (date: Date) =>
     '日一二三四五六'[date.getDay()]
   }`
 
-export const timeOf = (record: DailyRecord) => record.occurredAt.slice(11, 16) || '--:--'
+export const timeOf = (record: DailyRecord) => localTime(record.occurredAt)
 
 export const durationLabel = (minutes = 0) => {
   const hours = Math.floor(minutes / 60)

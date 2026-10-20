@@ -67,7 +67,12 @@ export const schemas: Record<string, CollectionSchema> = {
     fields: [
       { name: 'familyId', type: 'string', required: true, description: '家庭 ID' },
       { name: 'childId', type: 'string', required: true, description: '宝宝 ID' },
-      { name: 'category', type: 'string', required: true, description: '成长记录分类' },
+      {
+        name: 'category',
+        type: 'string',
+        required: true,
+        description: '成长记录分类，measurement 为身体测量，milestone 为技能里程碑',
+      },
       { name: 'title', type: 'string', required: true, description: '记录标题' },
       { name: 'occurredAt', type: 'date', required: true, description: '发生时间' },
       { name: 'content', type: 'string', description: '记录内容' },
@@ -85,6 +90,10 @@ export const schemas: Record<string, CollectionSchema> = {
     ],
     indexes: [
       { name: 'idx_child_occurred', fields: { familyId: 1, childId: 1, occurredAt: -1 } },
+      {
+        name: 'idx_child_category_occurred',
+        fields: { familyId: 1, childId: 1, category: 1, occurredAt: -1 },
+      },
       { name: 'idx_category_occurred', fields: { familyId: 1, category: 1, occurredAt: -1 } },
     ],
   },
