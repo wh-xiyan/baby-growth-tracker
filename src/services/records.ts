@@ -39,6 +39,8 @@ export interface CreateRecordInput {
 export interface DailyRecord extends CreateRecordInput {
   id: string
   createdBy?: string
+  version?: number
+  updatedAt?: string
   authorName?: string
   media?: Array<{ fileId: string; fileType: string }>
 }
@@ -59,6 +61,8 @@ export async function createRecord(input: CreateRecordInput): Promise<{ id: stri
     {
       ...input,
       id,
+      version: 1,
+      updatedAt: new Date().toISOString(),
       createdBy: useSessionStore.getState().userId,
       mediaFileIds: input.mediaFileIds || [],
     },
@@ -137,13 +141,16 @@ export async function getRecord(input: {
   const session = useSessionStore.getState()
   return {
     ...record,
+    version: record.version || 0,
     authorName:
       record.createdBy === session.userId
         ? session.user?.nickname || '我'
         : record.authorName || '家庭成员',
     media: (record.mediaFileIds || []).map((fileId) => ({
       fileId,
-      fileType: (Taro.getStorageSync('baby-growth-demo-media') || {})[fileId] || 'image',
+      fileType:
+        (Taro.getStorageSync('baby-growth-demo-media') || {})[fileId] ||
+        (['measurement', 'milestone', 'study'].includes(record.category) ? 'unknown' : 'image'),
     })),
   }
 }

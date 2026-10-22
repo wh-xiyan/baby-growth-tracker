@@ -93,3 +93,42 @@
     border-radius: 14px;
   }
 }
+.care-detail-page {
+  .growth-detail-management {
+    padding: 18px 0 30px;
+  }
+  .growth-detail-permission {
+    display: block;
+    padding: 12px;
+    margin: 16px 0;
+    background: #eaf1ea;
+    border-radius: 12px;
+    color: #496f56;
+    font-size: 12px;
+  }
+  .growth-detail-actions {
+    display: flex;
+    gap: 12px;
+    > button {
+      flex: 1;
+      min-height: 48px;
+      margin: 0;
+      padding: 12px;
+      border-radius: 13px;
+      font-size: 15px;
+      line-height: 1.6;
+      &::after {
+        border: 0;
+      }
+    }
+  }
+  .growth-detail-delete {
+    background: #fff;
+    color: #a4513e;
+    border: 1px solid #e8e9df;
+  }
+  .growth-detail-edit {
+    color: #fff;
+    background: #7fa68a;
+  }
+}

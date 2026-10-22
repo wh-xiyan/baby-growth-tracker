@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>我的家庭 · 宝宝成长录交互原型</title>
+    <link rel="stylesheet" href="../growth/base.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <aside>
+      <strong>家庭关联 · 交互演示</strong>
+      <p>沿用成长页的燕麦色与叶绿色。全部为模拟数据，不连接真实家庭。</p>
+      <label for="scenario">切换体验身份</label
+      ><select id="scenario">
+        <option value="guest">游客 · 未关联</option>
+        <option value="pending">游客 · 待审批</option>
+        <option value="owner">妈妈 · 创建者</option>
+        <option value="admin">爸爸 · 管理员</option>
+        <option value="adult">奶奶 · 普通成员</option>
+        <option value="viewer">其他家人 · 只读</option></select
+      ><button class="secondary" id="reset">重置当前演示</button>
+      <p>建议路径：游客建档 → 关联家庭；创建者 → 审批申请 → 成员管理 → 身份变更。</p>
+      <p>邀请码：<b>HOME26</b></p>
+      <p>后台审批和权限失效可通过页面中的“模拟”操作体验。刷新保留演示进度。</p>
+    </aside>
+    <div class="shell">
+      <div class="demo">独立可点击原型 <span>模拟数据 · 非真实账户</span></div>
+      <header class="nav">
+        <button id="back" aria-label="返回">返回</button><strong id="title">我的家庭</strong
+        ><button id="home">首页</button>
+      </header>
+      <main id="app"></main>
+      <nav class="bottom">
+        <button data-route="home">首页</button><button data-route="records">成长</button
+        ><button data-route="family">家庭</button><button data-route="mine">我的</button>
+      </nav>
+    </div>
+    <dialog id="dialog">
+      <form method="dialog">
+        <h2 id="dialog-title"></h2>
+        <p id="dialog-body"></p>
+        <div class="actions">
+          <button value="cancel" class="secondary">取消</button
+          ><button value="confirm" class="primary">确认</button>
+        </div>
+      </form>
+    </dialog>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>

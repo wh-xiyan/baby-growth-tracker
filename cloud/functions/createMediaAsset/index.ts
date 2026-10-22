@@ -4,7 +4,13 @@ export async function main(event: Record<string, unknown>) {
   const familyId = String(event.familyId || '')
   const member = await activeMember(familyId, openid)
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
-  if (!event.childId || !event.fileId || !event.fileType) throw new Error('INVALID_MEDIA')
+  if (
+    !event.childId ||
+    typeof event.fileId !== 'string' ||
+    !event.fileId ||
+    !['image', 'video'].includes(String(event.fileType))
+  )
+    throw new Error('INVALID_MEDIA')
   const child = await db
     .collection('children')
     .where({ _id: event.childId, familyId })

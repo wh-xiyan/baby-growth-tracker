@@ -20,12 +20,15 @@ export async function main(event: { familyId?: string; childId?: string; recordI
     : { data: [] }
   const authors = await recordAuthors(familyId, [record])
   return result({
-    media: media.data.map((item: Record<string, any>) => ({
-      fileId: item.fileId,
-      fileType: item.fileType,
+    media: (record.mediaFileIds || []).map((fileId: string) => ({
+      fileId,
+      fileType:
+        media.data.find((asset: Record<string, any>) => asset.fileId === fileId)?.fileType ||
+        'unknown',
     })),
     ...record,
     id: record._id,
+    version: record.version || 0,
     authorName: authors.get(record.createdBy) || '家庭成员',
     occurredAt: new Date(record.occurredAt).toISOString(),
   })

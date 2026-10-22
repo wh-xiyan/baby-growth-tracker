@@ -1,6 +1,7 @@
 import { Button, Picker, ScrollView, Text, View } from '@tarojs/components'
-import Taro, { useDidShow, usePullDownRefresh, useUnload, useRouter } from '@tarojs/taro'
+import Taro, { usePullDownRefresh, useUnload, useRouter } from '@tarojs/taro'
 import { useMemo, useState } from 'react'
+import { usePageDidShow } from '../../services/media-preview'
 import { consumeRecordsUpdate, requestHomeRecordsRefresh } from '../../services/records'
 import { useSessionStore } from '../../stores/session'
 import { localDate } from '../../utils/home'
@@ -65,7 +66,7 @@ export default function RecordList({
     setRange(draft)
     setRangeVisible(false)
   }
-  useDidShow(() => {
+  usePageDidShow(() => {
     if (consumeRecordsUpdate()) void reload()
   })
   useUnload(() => {

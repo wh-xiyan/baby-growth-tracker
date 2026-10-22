@@ -105,7 +105,10 @@ export function careMetrics(records: DailyRecord[], category: CareCategory) {
   ]
 }
 const metricLabels: Record<string, string> = {
-  height: '身高（cm）',
+  height: '身长/身高（cm）',
+  headCircumference: '头围（cm）',
+  measurementMethod: '身长/身高测量方法',
+  measurementSource: '测量来源',
   weight: '体重（kg）',
   amount: '用量',
   unit: '单位',
@@ -123,6 +126,8 @@ const metricLabels: Record<string, string> = {
 }
 const valueLabels: Record<string, Record<string, string>> = {
   feedingType: feedingLabels,
+  measurementMethod: { lying: '卧位身长', standing: '站立身高', unknown: '未记录方法' },
+  measurementSource: { home: '家庭测量', clinic: '机构测量' },
   side: { left: '左侧', right: '右侧' },
   foodType: { staple: '主食', vegetable: '蔬菜', meat: '肉类' },
   healthType: { temperature: '体温', symptom: '症状', medicine: '用药', visit: '就医' },

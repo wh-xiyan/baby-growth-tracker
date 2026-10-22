@@ -1,6 +1,7 @@
 import { Button, Input, Picker, ScrollView, Text, View } from '@tarojs/components'
-import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
+import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import { useCallback, useEffect, useState } from 'react'
+import { usePageDidShow } from '../../services/media-preview'
 import { PageLoading } from '../../components/page-loading'
 import { Icon } from '../../components/icon'
 import { useSessionStore } from '../../stores/session'
@@ -167,7 +168,7 @@ export default function Vaccine() {
     setFormVisible(false)
   }
 
-  useDidShow(() => {
+  usePageDidShow(() => {
     if (consumeVaccineUpdate()) loadVaccines()
   })
 

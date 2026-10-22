@@ -35,6 +35,7 @@ export function validateRecord(data: Record<string, any>) {
   for (const key of [
     'height',
     'weight',
+    'headCircumference',
     'amount',
     'durationMinutes',
     'sleepDurationMinutes',
@@ -46,8 +47,25 @@ export function validateRecord(data: Record<string, any>) {
     )
       throw new Error('INVALID_METRICS')
   }
-  if (data.category === 'measurement' && !(metrics.height > 0 || metrics.weight > 0))
-    throw new Error('MEASUREMENT_REQUIRED')
+  if (data.category === 'measurement') {
+    if (!(metrics.height > 0 || metrics.weight > 0 || metrics.headCircumference > 0))
+      throw new Error('MEASUREMENT_REQUIRED')
+    for (const key of ['height', 'weight', 'headCircumference']) {
+      if (metrics[key] !== undefined && metrics[key] <= 0) throw new Error('INVALID_METRICS')
+    }
+    if (metrics.height !== undefined && !['lying', 'standing'].includes(metrics.measurementMethod))
+      throw new Error('MEASUREMENT_METHOD_REQUIRED')
+    if (
+      metrics.measurementSource !== undefined &&
+      !['home', 'clinic'].includes(metrics.measurementSource)
+    )
+      throw new Error('INVALID_METRICS')
+  }
+  if (
+    ['milestone', 'study'].includes(data.category) &&
+    (data.title.trim().length > 50 || (data.content || '').length > 2000)
+  )
+    throw new Error('INVALID_GROWTH_CONTENT')
   if (
     metrics.sleepStart?.includes('T') &&
     metrics.sleepEnd?.includes('T') &&
@@ -57,8 +75,10 @@ export function validateRecord(data: Record<string, any>) {
   if (
     data.mediaFileIds !== undefined &&
     (!Array.isArray(data.mediaFileIds) ||
-      data.mediaFileIds.length > 9 ||
-      data.mediaFileIds.some((id: unknown) => typeof id !== 'string'))
+      data.mediaFileIds.length >
+        (['milestone', 'study', 'measurement'].includes(data.category) ? 10 : 9) ||
+      data.mediaFileIds.some((id: unknown) => typeof id !== 'string' || !id) ||
+      new Set(data.mediaFileIds).size !== data.mediaFileIds.length)
   )
     throw new Error('INVALID_MEDIA')
   return {
@@ -77,6 +97,7 @@ export async function validateRecordMedia(familyId: string, childId: string, ids
     .where({ familyId, childId, fileId: db.command.in(ids), deletedAt: db.command.exists(false) })
     .get()
   if (
+    media.data.some((item: Record<string, any>) => !['image', 'video'].includes(item.fileType)) ||
     new Set(media.data.map((item: Record<string, any>) => item.fileId)).size !== new Set(ids).size
   )
     throw new Error('INVALID_MEDIA_OWNERSHIP')

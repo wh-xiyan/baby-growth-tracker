@@ -2,6 +2,7 @@ export default defineAppConfig({
   pages: [
     'pages/home/index',
     'pages/growth/index',
+    'pages/growth-reference/index',
     'pages/media/index',
     'pages/profile/index',
     'pages/onboarding/index',

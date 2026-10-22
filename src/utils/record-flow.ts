@@ -49,7 +49,7 @@ export const recordForms: Array<{
     value: 'measurement',
     scene: 'growth',
     label: '身体测量',
-    description: '身高和体重',
+    description: '身长/身高、体重与头围',
     icon: 'sapling',
   },
   {

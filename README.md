@@ -198,7 +198,7 @@ family_members: familyId + userId
 
 ```text
 owner   创建者，可管理家庭、成员和所有内容
-adult   可查看、新增和编辑成长内容
+adult   可查看、新增成长内容，仅可编辑或删除本人记录
 viewer  仅查看
 ```
 
@@ -225,6 +225,7 @@ createRecord
 updateRecord
 deleteRecord
 listRecords
+listGrowthRecords
 createVaccine
 updateVaccine
 listVaccines
@@ -457,3 +458,7 @@ sans-serif
 - ConfirmSheet
 这样首次设置页的视觉语言就能自然延续到首页、成长、相册、家庭和设置页面。
 最终整体效果应当像一本轻盈、温暖、可以每天打开的家庭成长日记，而不是传统的健康管理工具。
+
+## 成长功能（成长档案中心）
+
+已实现身体测量/成长事件双工作区、头围和测量方法、卫健委WS/T 423—2022参考曲线、10个混合媒体附件及记录编辑权限。云函数部署、索引、历史数据兼容和验收步骤见 [成长功能上线说明](design-docs/growth-implementation.md)。业务回归检查：`node tests/growth.cjs`。

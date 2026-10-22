@@ -1,0 +1,37 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const nodes=new Map(),revoked=[];let seq=0;
+function node(id){if(!nodes.has(id))nodes.set(id,{value:id==='#role'?'owner':'',innerHTML:'',textContent:'',hidden:false,disabled:false,addEventListener(){},showModal(){this.open=true},close(){this.open=false},getContext(){return new Proxy({},{get:()=>()=>{},set:()=>true})}});return nodes.get(id)}
+const ctx=vm.createContext({document:{querySelector:node,createElement:()=>({remove(){}}),body:{appendChild(){}}},window:{scrollTo(){}},URL:{createObjectURL:()=>`blob:test-${++seq}`,revokeObjectURL:u=>revoked.push(u)},setTimeout(){},confirm:()=>true,Date,console});
+for(const f of ['reference-data.js','reference-ui.js'])vm.runInContext(fs.readFileSync('prototypes/growth/'+f,'utf8'),ctx);
+vm.runInContext(fs.readFileSync('prototypes/growth/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1],ctx);
+const run=s=>vm.runInContext(s,ctx);
+run("openForm('milestone')");
+ctx.files=Array.from({length:11},(_,i)=>({name:'file'+i,type:i<6?'image/jpeg':'video/mp4',size:100}));
+run("chooseMedia({files,value:''})");assert.equal(run('draftMedia.length'),10);assert(node('#media-add').disabled);assert(node('#media-warning').textContent.includes('1个'));
+run('removeDraftMedia(0)');assert.equal(run('draftMedia.length'),9);assert(!node('#media-add').disabled);
+run("chooseMedia({files:[{name:'v',type:'video/mp4',size:100}],value:''})");assert.equal(run('draftMedia.length'),10);
+run("chooseMedia({files:[{name:'t',type:'text/plain',size:100},{name:'e',type:'image/png',size:0}],value:''})");assert(node('#media-warning').textContent.includes('非照片'));assert(node('#media-warning').textContent.includes('空文件'));
+run('openMediaPreview(9,true)');assert(node('#preview-body').innerHTML.includes('controls'));assert(node('#preview-next').disabled);run('movePreview(1)');assert.equal(run('previewIndex'),9);run('closeMediaPreview()');assert.equal(node('#preview-body').innerHTML,'');
+node('#title').value='第一次独立走路';node('#when').value=run("daysAgo(1)+'T10:00'");run('save({preventDefault(){}})');assert.equal(run('records.at(-1).media.length'),10);assert(node('#app').innerHTML.includes('10个附件'));
+run('selected=records.at(-1).id; detail(selected)');assert(node('#app').innerHTML.includes('照片与视频'));
+run("openForm('milestone',selected)");const savedUrl=run('draftMedia[0].url');run('removeDraftMedia(0);closeForm()');assert.equal(run('records.at(-1).media.length'),10);assert(!revoked.includes(savedUrl));
+run("openForm('milestone',selected);removeDraftMedia(0);save({preventDefault(){}})");assert.equal(run('records.at(-1).media.length'),9);assert(revoked.includes(savedUrl));
+node('#role').value='viewer';run("chooseMedia({files:[{name:'x',type:'image/png',size:100}],value:''})");assert.equal(run('draftMedia.length'),0);
+
+node('#role').value='owner';
+assert.equal(run('GROWTH_STANDARD.data.male.height.length'),44);
+assert.equal(run('GROWTH_STANDARD.data.female.headCircumference.length'),29);
+assert.equal(run('GROWTH_STANDARD.data.male.height.find(r=>r[0]===12)[4]'),76.7);
+assert.equal(run('GROWTH_STANDARD.data.female.weight.find(r=>r[0]===24)[4]'),11.9);
+assert.equal(run("referenceStatus({when:'2026-03-12T10:00',height:76.7,method:'lying'},'height').pos"),'位于 P50');
+assert(run("referenceStatus({when:'2026-03-12T10:00',height:76.7,method:'standing'},'height').reason").includes('暂不对照'));
+assert(run("referenceStatus({when:'2032-03-12T10:00',weight:20},'weight').reason").includes('未满7'));
+assert(run("referenceStatus({when:'2028-03-13T10:00',headCircumference:49},'headCircumference').reason").includes('超出'));
+assert(run("referenceStatus({when:'2027-04-12T10:00',weight:13},'weight').reason").includes('未列出'));
+assert.equal(run("referenceStatus({when:'2027-03-12T10:00',height:88.2,method:'standing'},'height').pos"),'位于 P50');
+run("referenceSex.a='female'");assert.equal(run("referenceStatus({when:'2026-03-12T10:00',weight:9.4},'weight').pos"),'位于 P50');
+run("referenceSex.a=''");assert(run("referenceStatus({when:'2026-03-12T10:00',weight:9.4},'weight').reason").includes('未填写'));
+run("referenceSex.a='male'; tab='measurement';view='main';render()");assert(node('#app').innerHTML.includes('WS/T 423'));
+run('toggleReference()');assert(node('#app').innerHTML.includes('已隐藏标准'));
+console.log('PASS: official table samples, matching, sex switch, 24-month method boundary, head circumference limit, age limit, absent nodes, reference switch');
+console.log('PASS: combined limit, overflow, removal, invalid files, video preview, save/detail, cancel preservation, edit cleanup, readonly');

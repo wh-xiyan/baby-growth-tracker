@@ -14,6 +14,7 @@ import {
   resolveRecordEntry,
   type RecordForm,
 } from '../../utils/record-flow'
+import { GrowthRecordEditor } from './GrowthRecordEditor'
 import './index.scss'
 
 type MainTab = RecordForm
@@ -53,7 +54,7 @@ const formatSleepDuration = (minutes: number) => {
   return `${hours} 小时 ${remainder} 分钟`
 }
 
-export default function RecordEdit() {
+function CareRecordEdit() {
   const router = useRouter()
   const familyId = useSessionStore((state) => state.familyId)
   const childId = useSessionStore((state) => state.childId)
@@ -646,5 +647,14 @@ function Segment<T extends string>({
         </Button>
       ))}
     </View>
+  )
+}
+
+export default function RecordEdit() {
+  const { params } = useRouter()
+  return ['measurement', 'milestone', 'study'].includes(params.category || '') ? (
+    <GrowthRecordEditor />
+  ) : (
+    <CareRecordEdit />
   )
 }

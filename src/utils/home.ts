@@ -11,7 +11,9 @@ export const dayStart = (date: string) => new Date(`${date}T00:00:00+08:00`).get
 export const isMeasurement = (record: Pick<GrowthRecord, 'category' | 'metrics'>) =>
   record.category === 'measurement' ||
   (record.category === 'milestone' &&
-    (record.metrics?.height !== undefined || record.metrics?.weight !== undefined))
+    (record.metrics?.height !== undefined ||
+      record.metrics?.weight !== undefined ||
+      record.metrics?.headCircumference !== undefined))
 
 export function measurementPoints(records: GrowthRecord[], metric: 'height' | 'weight') {
   return records

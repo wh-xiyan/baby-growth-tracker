@@ -1,6 +1,7 @@
 import { Button, Image, Input, Picker, Text, Textarea, View } from '@tarojs/components'
-import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
+import Taro, { usePullDownRefresh } from '@tarojs/taro'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { usePageDidShow } from '../../services/media-preview'
 import { useSessionStore } from '../../stores/session'
 import { Icon } from '../../components/icon'
 import { MediaThumbnail, MediaThumbnails } from '../../components/media/MediaThumbnail'
@@ -150,7 +151,7 @@ export default function Home() {
     loadReminders()
   }, [loadReminders])
 
-  useDidShow(() => {
+  usePageDidShow(() => {
     consumeRecordsUpdate()
     consumeHomeRecordsRefresh()
     loadTodayRecords()
@@ -419,7 +420,12 @@ export default function Home() {
         <View className='home-section'>
           <View className='section-heading'>
             <Text>成长数据</Text>
-            <Button onClick={() => Taro.switchTab({ url: '/pages/growth/index' })}>
+            <Button
+              onClick={() => {
+                Taro.setStorageSync('baby-growth-growth-entry', 'measurement')
+                Taro.switchTab({ url: '/pages/growth/index' })
+              }}
+            >
               查看完整曲线
             </Button>
           </View>
@@ -468,7 +474,14 @@ export default function Home() {
         <View className='home-section'>
           <View className='section-heading'>
             <Text>最近学会</Text>
-            <Button onClick={() => Taro.switchTab({ url: '/pages/growth/index' })}>查看全部</Button>
+            <Button
+              onClick={() => {
+                Taro.setStorageSync('baby-growth-growth-entry', 'events')
+                Taro.switchTab({ url: '/pages/growth/index' })
+              }}
+            >
+              查看全部
+            </Button>
           </View>
           {recordsLoading ? (
             <View className='record-state'>正在加载新发现…</View>

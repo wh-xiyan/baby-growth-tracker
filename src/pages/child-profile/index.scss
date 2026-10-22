@@ -1,0 +1,56 @@
+.child-profile-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24px 22px;
+  background: #f7f5ec;
+  color: #34463b;
+  .child-profile-title {
+    display: block;
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .child-profile-hint {
+    display: block;
+    color: #778279;
+    font-size: 13px;
+    line-height: 1.8;
+    margin: 14px 0;
+  }
+  .child-profile-label {
+    display: block;
+    margin: 24px 0 8px;
+    font-size: 14px;
+  }
+  input,
+  .child-profile-picker {
+    min-height: 46px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #dddfd3;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 15px;
+  }
+  .child-profile-save {
+    margin: 24px 0;
+    min-height: 48px;
+    padding: 12px;
+    border-radius: 13px;
+    background: #7fa68a;
+    color: #fff;
+    font-size: 15px;
+    line-height: 1.6;
+    &::after {
+      border: 0;
+    }
+  }
+  .child-profile-error {
+    padding: 12px;
+    background: #faf0d7;
+    color: #83583e;
+    border-radius: 10px;
+    font-size: 13px;
+  }
+}

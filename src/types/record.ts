@@ -30,6 +30,9 @@ export interface RecordMetrics {
   sleepDurationMinutes?: number
   height?: number
   weight?: number
+  headCircumference?: number
+  measurementMethod?: 'lying' | 'standing' | 'unknown'
+  measurementSource?: 'home' | 'clinic'
   [key: string]: string | number | undefined
 }
 

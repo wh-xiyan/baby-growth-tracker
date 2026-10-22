@@ -1,6 +1,7 @@
 import { Button, Input, Picker, ScrollView, Text, Textarea, View } from '@tarojs/components'
-import Taro, { useDidShow, usePullDownRefresh, useRouter } from '@tarojs/taro'
+import Taro, { usePullDownRefresh, useRouter } from '@tarojs/taro'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { usePageDidShow } from '../../services/media-preview'
 import {
   completeVaccine,
   getVaccine,
@@ -75,7 +76,7 @@ export default function VaccineDetail() {
       scopeRef.current = ''
     }
   }, [load])
-  useDidShow(() => {
+  usePageDidShow(() => {
     if (shown.current) void load()
     shown.current = true
   })
