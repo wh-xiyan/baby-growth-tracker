@@ -1,4 +1,7 @@
 import Taro from '@tarojs/taro'
+import { assertFamilyAccess } from './permissions'
+import { useSessionStore } from '../stores/session'
+import { canManage } from '../domain/family'
 import type {
   HomeReminder,
   ReminderUrgency,
@@ -158,6 +161,7 @@ export async function listVaccines(input: {
   familyId: string
   childId: string
 }): Promise<Vaccine[]> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? String(input.childId) : undefined)
   const vaccines = isCloudConfigured()
     ? await callCloudFunction<Vaccine[]>('listVaccines', input)
     : ((Taro.getStorageSync(DEMO_KEY) || []) as Vaccine[])
@@ -172,6 +176,7 @@ export async function getVaccine(input: {
   childId: string
   vaccineId: string
 }): Promise<Vaccine> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? String(input.childId) : undefined)
   if (isCloudConfigured())
     return normalizeVaccine(await callCloudFunction<Vaccine>('getVaccine', input))
   const vaccines = await listVaccines(input)
@@ -185,6 +190,7 @@ export async function listHomeReminders(input: {
   childId: string
   limit?: number
 }): Promise<HomeReminder[]> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? String(input.childId) : undefined)
   if (isCloudConfigured()) return callCloudFunction<HomeReminder[]>('listHomeReminders', input)
   const vaccines = await listVaccines(input)
   return vaccines
@@ -219,6 +225,7 @@ export async function createVaccine(input: {
   reminderDaysBefore?: number
   note?: string
 }): Promise<{ id: string }> {
+  assertFamilyAccess(input.familyId, input.childId, true)
   if (isCloudConfigured()) {
     const created = await callCloudFunction<{ id: string }>('createVaccine', input)
     markVaccineUpdated()
@@ -233,6 +240,7 @@ export async function createVaccine(input: {
       ...input,
       id,
       status: 'planned',
+      createdBy: useSessionStore.getState().userId,
       reminderEnabled: input.reminderEnabled !== false,
       createdAt: now,
       updatedAt: now,
@@ -249,6 +257,7 @@ export async function createVaccineSeries(input: {
   totalDoses: number
   doses: VaccineDosePlan[]
 }): Promise<{ seriesId: string; vaccineIds: string[] }> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? String(input.childId) : undefined, true)
   if (isCloudConfigured()) {
     const created = await callCloudFunction<{ seriesId: string; vaccineIds: string[] }>(
       'createVaccineSeries',
@@ -280,6 +289,7 @@ export async function createVaccineSeries(input: {
     ...dose,
     status: 'planned' as const,
     reminderEnabled: true,
+    createdBy: useSessionStore.getState().userId,
     createdAt: now,
     updatedAt: now,
   }))
@@ -298,12 +308,23 @@ export async function updateVaccinePlan(input: {
     institution?: string
   }
 }): Promise<{ id: string }> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? String(input.childId) : undefined, true)
   if (isCloudConfigured()) {
     const updated = await callCloudFunction<{ id: string }>('updateVaccine', input)
     markVaccineUpdated()
     return updated
   }
   const vaccines = (Taro.getStorageSync(DEMO_KEY) || []) as Vaccine[]
+  const target = vaccines.find((v) => v.id === input.vaccineId && v.familyId === input.familyId)
+  if (!target) throw new Error('VACCINE_NOT_FOUND')
+  if (
+    !canManage(
+      useSessionStore.getState().currentRole,
+      useSessionStore.getState().userId,
+      target.createdBy,
+    )
+  )
+    throw new Error('FORBIDDEN')
   const updated = vaccines.map((vaccine) =>
     vaccine.id === input.vaccineId && vaccine.familyId === input.familyId
       ? { ...vaccine, ...input.data, updatedAt: new Date().toISOString() }
@@ -319,6 +340,7 @@ export async function deleteVaccinePlan(input: {
   vaccineId: string
   force?: boolean
 }): Promise<{ id: string }> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? String(input.childId) : undefined, true)
   if (isCloudConfigured()) {
     const deleted = await callCloudFunction<{ id: string }>('deleteVaccine', input)
     markVaccineUpdated()
@@ -329,6 +351,14 @@ export async function deleteVaccinePlan(input: {
     (item) => item.id === input.vaccineId && item.familyId === input.familyId,
   )
   if (!target) throw new Error('VACCINE_NOT_FOUND')
+  if (
+    !canManage(
+      useSessionStore.getState().currentRole,
+      useSessionStore.getState().userId,
+      target.createdBy,
+    )
+  )
+    throw new Error('FORBIDDEN')
   if (target.status === 'completed') throw new Error('COMPLETED_VACCINE_IMMUTABLE')
   const later = vaccines.some(
     (item) =>
@@ -354,6 +384,7 @@ export async function completeVaccine(input: {
   institution?: string
   note?: string
 }): Promise<{ id: string }> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? String(input.childId) : undefined, true)
   if (isCloudConfigured()) {
     const completed = await callCloudFunction<{ id: string }>('completeVaccine', input)
     markVaccineUpdated()
@@ -365,6 +396,8 @@ export async function completeVaccine(input: {
       ? {
           ...vaccine,
           status: 'completed' as const,
+          completionVersion: (vaccine.completionVersion || 0) + 1,
+          completedBy: useSessionStore.getState().userId,
           completedDate: input.completedDate,
           institution: input.institution,
           completedNote: input.note,
@@ -375,4 +408,69 @@ export async function completeVaccine(input: {
   Taro.setStorageSync(DEMO_KEY, updated)
   markVaccineUpdated()
   return { id: input.vaccineId }
+}
+
+export async function manageVaccineCompletion(input: {
+  familyId: string
+  vaccineId: string
+  action: 'update' | 'delete'
+  expectedVersion?: number
+  completedDate?: string
+  institution?: string
+  note?: string
+}) {
+  const session = assertFamilyAccess(input.familyId, undefined, true)
+  if (isCloudConfigured()) await callCloudFunction('manageVaccineCompletion', input)
+  else {
+    const all = (Taro.getStorageSync(DEMO_KEY) || []) as Vaccine[],
+      target = all.find((v) => v.id === input.vaccineId && v.familyId === input.familyId)
+    if (!target || target.status !== 'completed') throw new Error('NOT_FOUND')
+    if ((target.completionVersion || 0) !== input.expectedVersion)
+      throw new Error('RECORD_CONFLICT')
+    if (!canManage(session.currentRole, session.userId, target.completedBy))
+      throw new Error('FORBIDDEN')
+    if (input.action === 'delete') {
+      if (
+        all.some(
+          (v) =>
+            v.familyId === input.familyId &&
+            v.childId === target.childId &&
+            v.catalogId === target.catalogId &&
+            Number(v.doseNumber) > Number(target.doseNumber) &&
+            v.status === 'completed',
+        )
+      )
+        throw new Error('LATER_DOSES_EXIST')
+      target.status = 'planned'
+      delete target.completedDate
+      delete target.completedBy
+      delete target.completedNote
+    } else {
+      const date = new Date(String(input.completedDate))
+      if (!Number.isFinite(date.getTime()) || date > new Date())
+        throw new Error('INVALID_COMPLETED_DATE')
+      if (
+        all.some(
+          (v) =>
+            v.id !== target.id &&
+            v.familyId === target.familyId &&
+            v.childId === target.childId &&
+            v.catalogId === target.catalogId &&
+            v.status === 'completed' &&
+            ((Number(v.doseNumber) < Number(target.doseNumber) &&
+              date < new Date(v.completedDate!)) ||
+              (Number(v.doseNumber) > Number(target.doseNumber) &&
+                date > new Date(v.completedDate!))),
+        )
+      )
+        throw new Error('VACCINE_COMPLETED_DATE_INVALID')
+      target.completedDate = input.completedDate
+      target.institution = input.institution
+      target.completedNote = input.note
+    }
+    target.completionVersion = (target.completionVersion || 0) + 1
+    target.updatedAt = new Date().toISOString()
+    Taro.setStorageSync(DEMO_KEY, all)
+  }
+  markVaccineUpdated()
 }

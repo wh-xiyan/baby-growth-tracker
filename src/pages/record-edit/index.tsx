@@ -14,7 +14,9 @@ import {
   resolveRecordEntry,
   type RecordForm,
 } from '../../utils/record-flow'
+import { ExistingCareEditor } from './ExistingCareEditor'
 import { GrowthRecordEditor } from './GrowthRecordEditor'
+import { usePageDidShow } from '../../services/media-preview'
 import './index.scss'
 
 type MainTab = RecordForm
@@ -62,7 +64,7 @@ function CareRecordEdit() {
   const currentRole = useSessionStore((state) => state.currentRole)
   const scene = entry.scene
   const [mainTab, setMainTab] = useState<MainTab | undefined>(entry.form)
-  const canEdit = currentRole === 'owner' || currentRole === 'adult'
+  const canEdit = currentRole === 'owner' || currentRole === 'admin' || currentRole === 'adult'
   const [feedingTab, setFeedingTab] = useState<FeedingTab>(
     router.params.category === 'solid_food' ? 'solid_food' : 'breastfeeding',
   )
@@ -103,7 +105,7 @@ function CareRecordEdit() {
       Taro.showToast({ title: '请先完成宝宝档案', icon: 'none' })
       return
     }
-    if (currentRole !== 'owner' && currentRole !== 'adult') {
+    if (currentRole !== 'owner' && currentRole !== 'admin' && currentRole !== 'adult') {
       Taro.showToast({ title: '只读成员无法新增记录', icon: 'none' })
       return
     }
@@ -651,9 +653,12 @@ function Segment<T extends string>({
 }
 
 export default function RecordEdit() {
+  usePageDidShow(() => {})
   const { params } = useRouter()
   return ['measurement', 'milestone', 'study'].includes(params.category || '') ? (
     <GrowthRecordEditor />
+  ) : params.id ? (
+    <ExistingCareEditor />
   ) : (
     <CareRecordEdit />
   )

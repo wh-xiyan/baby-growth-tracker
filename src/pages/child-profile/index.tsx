@@ -1,22 +1,25 @@
 import { Button, Input, Picker, Text, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useRouter } from '@tarojs/taro'
 import { useEffect, useState } from 'react'
 import { useSessionStore } from '../../stores/session'
 import { updateChildProfile } from '../../services/children'
 import { localDate } from '../../utils/home'
 import { validDate } from '../../utils/care-records'
 import type { Child } from '../../types/child'
+import { usePageDidShow } from '../../services/media-preview'
 import './index.scss'
 
 export default function ChildProfile() {
-  const { children, childId, currentRole } = useSessionStore(),
-    child = children.find((c) => c.id === childId)
+  usePageDidShow(() => {})
+  const { params } = useRouter()
+  const { children, personalChildren, childId, currentRole } = useSessionStore(),
+    child = [...children, ...(personalChildren || [])].find((c) => c.id === (params.id || childId))
   const [name, setName] = useState(''),
     [birthday, setBirthday] = useState(''),
     [gender, setGender] = useState<Child['gender']>('unknown'),
     [saving, setSaving] = useState(false),
     [error, setError] = useState('')
-  const allowed = currentRole === 'owner' || currentRole === 'adult'
+  const allowed = child?.scope === 'personal' || currentRole === 'owner' || currentRole === 'admin'
   useEffect(() => {
     setName(child?.name || '')
     setBirthday(child?.birthday?.slice(0, 10) || '')
@@ -49,7 +52,15 @@ export default function ChildProfile() {
       setSaving(false)
     }
   }
-  if (!child) return <View className='child-profile-page'>请先完成宝宝档案</View>
+  if (!child)
+    return (
+      <View className='child-profile-page'>
+        <Text>尚未选择宝宝</Text>
+        <Button onClick={() => Taro.navigateTo({ url: '/pages/family/index' })}>
+          选择或建立宝宝档案
+        </Button>
+      </View>
+    )
   return (
     <View className='child-profile-page'>
       <Text className='child-profile-title'>宝宝资料</Text>
@@ -94,7 +105,7 @@ export default function ChildProfile() {
           保存宝宝资料
         </Button>
       ) : (
-        <Text className='child-profile-hint'>只读成员可查看，无法修改宝宝资料。</Text>
+        <Text className='child-profile-hint'>仅管理员可修改家庭宝宝资料。</Text>
       )}
     </View>
   )

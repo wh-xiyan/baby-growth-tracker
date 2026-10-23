@@ -15,6 +15,8 @@ import {
   updateVaccinePlan,
 } from '../../services/vaccines'
 import type { Vaccine, VaccineCatalogItem, VaccinePaymentType } from '../../types/vaccine'
+import { FamilyIdentity } from '../../components/FamilyIdentity'
+import { canManage } from '../../domain/family'
 import './index.scss'
 
 const todayKey = () => {
@@ -254,9 +256,13 @@ export default function Vaccine() {
     }
   }
 
-  const canEdit = currentRole !== 'viewer'
+  const canEdit = ['owner', 'admin', 'adult'].includes(currentRole || '')
   const openEdit = (vaccine: Vaccine) => {
-    if (vaccine.status !== 'planned') return
+    if (
+      vaccine.status !== 'planned' ||
+      !canManage(currentRole, useSessionStore.getState().userId, vaccine.createdBy)
+    )
+      return
     setEditingVaccine(vaccine)
     setEditPlannedDate(vaccine.plannedDate.slice(0, 10))
     setEditPaymentType(vaccine.paymentType || 'free')
@@ -355,7 +361,9 @@ export default function Vaccine() {
         >
           {vaccine.name} ›
         </Text>
-        {canEdit && vaccine.status === 'planned' ? (
+        {canEdit &&
+        canManage(currentRole, useSessionStore.getState().userId, vaccine.createdBy) &&
+        vaccine.status === 'planned' ? (
           <Button
             className='vaccine-complete vaccine-complete-planned'
             loading={completingId === vaccine.id}
@@ -399,6 +407,7 @@ export default function Vaccine() {
   )
   return (
     <View className='vaccine-page'>
+      <FamilyIdentity />
       <PageLoading visible={loading} />
       <View className='vaccine-header'>
         <View className='vaccine-eyebrow'>HEALTH & CARE</View>
@@ -619,7 +628,9 @@ export default function Vaccine() {
         {!loading && !error && vaccines.length > 0 && (
           <View className='vaccine-list'>
             {vaccines.map((vaccine) =>
-              canEdit && vaccine.status === 'planned' ? (
+              canEdit &&
+              canManage(currentRole, useSessionStore.getState().userId, vaccine.createdBy) &&
+              vaccine.status === 'planned' ? (
                 <vaccine-swipe-cell
                   key={vaccine.id}
                   onEdit={() => openEdit(vaccine)}

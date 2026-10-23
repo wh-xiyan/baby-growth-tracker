@@ -17,6 +17,7 @@ import {
 import { Timeline } from './components/Timeline'
 import { filterOptions } from './constants'
 import { useDailyRecords } from './hooks/useDailyRecords'
+import { FamilyIdentity } from '../../components/FamilyIdentity'
 import './index.scss'
 
 export default function RecordList({
@@ -47,7 +48,7 @@ export default function RecordList({
   })
   const visible = useMemo(() => filterCare(records, filter, subtype), [records, filter, subtype])
   const queryKey = [familyId, childId, range.start, range.end, filter, subtype].join('|')
-  const canEdit = currentRole === 'owner' || currentRole === 'adult'
+  const canEdit = currentRole === 'owner' || currentRole === 'admin' || currentRole === 'adult'
   const addRecord = () => {
     const query = filter === 'all' ? 'scene=care' : `category=${filter}`
     const date = range.start === range.end ? range.end : today
@@ -81,6 +82,7 @@ export default function RecordList({
   })
   return (
     <View className={`record-list-page ${!canEdit ? 'care-readonly' : ''}`}>
+      <FamilyIdentity />
       <View className='care-page-heading'>
         <Text className='care-eyebrow'>小树成长日记</Text>
         <Text className='care-page-title'>每一笔，都是用心</Text>

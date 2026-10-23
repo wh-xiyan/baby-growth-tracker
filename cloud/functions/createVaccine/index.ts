@@ -11,7 +11,7 @@ export async function main(event: Record<string, unknown>) {
   const childId = String(event.childId || '')
   const catalogId = String(event.catalogId || '')
   const doseNumber = Number(event.doseNumber)
-  const member = await activeMember(familyId, context())
+  const member = await activeMember(familyId, context(), true)
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
   if (!childId || !catalogId || !event.plannedDate) throw new Error('INVALID_VACCINE')
   if (!Number.isInteger(doseNumber) || doseNumber < 1) throw new Error('VACCINE_DOSE_REQUIRED')

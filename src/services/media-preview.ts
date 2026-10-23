@@ -1,4 +1,6 @@
 import Taro, { useDidShow } from '@tarojs/taro'
+import { refreshFamilySession } from './family'
+import { useSessionStore } from '../stores/session'
 
 const previewPages = new WeakSet<object>()
 
@@ -21,6 +23,15 @@ export function usePageDidShow(callback: () => void) {
       previewPages.delete(page)
       return
     }
-    callback()
+    if (!useSessionStore.getState().initialized) {
+      callback()
+      return
+    }
+    void refreshFamilySession()
+      .then(callback)
+      .catch((error) => {
+        console.error('同步家庭权限失败', error)
+        useSessionStore.getState().setSession({ sessionError: '权限同步失败，请重试' })
+      })
   })
 }

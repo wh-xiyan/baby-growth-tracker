@@ -22,6 +22,7 @@ export interface Vaccine {
   note?: string
   completedNote?: string
   createdBy?: string
+  completionVersion?: number
   completedBy?: string
   createdAt?: string
   updatedAt?: string

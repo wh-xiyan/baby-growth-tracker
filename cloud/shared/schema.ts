@@ -13,6 +13,9 @@ export interface CollectionSchema {
 export const schemas: Record<string, CollectionSchema> = {
   users: {
     fields: [
+      { name: 'activeFamilyId', type: 'string', description: '唯一有效家庭，事务内维护' },
+      { name: 'pendingRequestId', type: 'string', description: '唯一待处理申请' },
+      { name: 'membershipVersion', type: 'number', description: '家庭权限版本' },
       { name: 'openid', type: 'string', required: true, description: '微信 OPENID，唯一' },
       { name: 'nickname', type: 'string', description: '用户昵称' },
       { name: 'avatarUrl', type: 'string', description: '头像地址' },
@@ -23,9 +26,11 @@ export const schemas: Record<string, CollectionSchema> = {
   },
   families: {
     fields: [
+      { name: 'status', type: 'string', description: 'active' },
+      { name: 'version', type: 'number', description: '并发版本' },
       { name: 'name', type: 'string', required: true, description: '家庭名称' },
       { name: 'ownerId', type: 'string', required: true, description: '家庭所有者用户 ID' },
-      { name: 'inviteCode', type: 'string', required: true, description: '家庭邀请码，唯一' },
+      { name: 'inviteCode', type: 'string', description: '家庭邀请码，唯一' },
       { name: 'inviteCodeExpiresAt', type: 'date', description: '邀请码过期时间' },
       { name: 'createdAt', type: 'date', required: true, description: '创建时间' },
       { name: 'updatedAt', type: 'date', required: true, description: '更新时间' },
@@ -37,9 +42,17 @@ export const schemas: Record<string, CollectionSchema> = {
   },
   family_members: {
     fields: [
+      { name: 'relationshipCode', type: 'string', description: '唯一亲属身份编码（中文枚举）' },
+      { name: 'permissionSource', type: 'string', description: 'identity_default 或 manual' },
+      { name: 'version', type: 'number', description: '身份权限并发版本' },
       { name: 'familyId', type: 'string', required: true, description: '家庭 ID' },
       { name: 'userId', type: 'string', required: true, description: '用户 ID' },
-      { name: 'role', type: 'string', required: true, description: 'owner、adult 或 viewer' },
+      {
+        name: 'role',
+        type: 'string',
+        required: true,
+        description: 'owner、admin、adult 或 viewer',
+      },
       { name: 'displayName', type: 'string', required: true, description: '家庭内显示名称' },
       { name: 'status', type: 'string', required: true, description: 'active 或 removed' },
       { name: 'joinedAt', type: 'date', required: true, description: '加入时间' },
@@ -48,12 +61,18 @@ export const schemas: Record<string, CollectionSchema> = {
     indexes: [
       { name: 'idx_family_user', fields: { familyId: 1, userId: 1 }, unique: true },
       { name: 'idx_user_status', fields: { userId: 1, status: 1 } },
+      { name: 'idx_user_status_id', fields: { userId: 1, status: 1, _id: 1 } },
+      { name: 'idx_family_status_id', fields: { familyId: 1, status: 1, _id: 1 } },
       { name: 'idx_family_status', fields: { familyId: 1, status: 1 } },
     ],
   },
   children: {
     fields: [
-      { name: 'familyId', type: 'string', required: true, description: '家庭 ID' },
+      { name: 'scope', type: 'string', description: 'personal 或 family，旧家庭宝宝兼容缺省' },
+      { name: 'createdBy', type: 'string', description: '个人档案所有人' },
+      { name: 'attachedBy', type: 'string', description: '归入家庭操作者' },
+      { name: 'attachedAt', type: 'date', description: '归入时间' },
+      { name: 'familyId', type: 'string', description: '家庭 ID' },
       { name: 'name', type: 'string', required: true, description: '宝宝姓名或昵称' },
       { name: 'gender', type: 'string', description: 'male、female 或 unknown' },
       { name: 'birthday', type: 'date', required: true, description: '出生日期' },
@@ -61,7 +80,11 @@ export const schemas: Record<string, CollectionSchema> = {
       { name: 'createdAt', type: 'date', required: true, description: '创建时间' },
       { name: 'updatedAt', type: 'date', required: true, description: '更新时间' },
     ],
-    indexes: [{ name: 'idx_family_created', fields: { familyId: 1, createdAt: -1 } }],
+    indexes: [
+      { name: 'idx_family_created', fields: { familyId: 1, createdAt: -1 } },
+      { name: 'idx_family_child_id', fields: { familyId: 1, _id: 1 } },
+      { name: 'idx_personal_owner', fields: { createdBy: 1, scope: 1, _id: 1 } },
+    ],
   },
   growth_records: {
     fields: [
@@ -210,3 +233,69 @@ export const schemas: Record<string, CollectionSchema> = {
     ],
   },
 }
+
+// New deterministic documents are changed together using runTransaction.
+Object.assign(schemas, {
+  family_identity_slots: {
+    fields: [
+      { name: 'familyId', type: 'string', required: true, description: '家庭ID' },
+      { name: 'relationshipCode', type: 'string', required: true, description: '身份编码' },
+      { name: 'userId', type: 'string', required: true, description: '占位用户' },
+      { name: 'memberId', type: 'string', required: true, description: '成员ID' },
+    ],
+    indexes: [
+      { name: 'idx_identity_unique', fields: { familyId: 1, relationshipCode: 1 }, unique: true },
+    ],
+  },
+  family_invitations: {
+    fields: [
+      { name: 'familyId', type: 'string', required: true, description: '家庭ID' },
+      { name: 'status', type: 'string', description: 'active/revoked' },
+      { name: 'expiresAt', type: 'string', description: 'ISO有效期' },
+      { name: 'usedCount', type: 'number', description: '已申请次数' },
+      { name: 'maxUses', type: 'number', description: '最多申请次数' },
+    ],
+    indexes: [{ name: 'idx_family_invite', fields: { familyId: 1, status: 1, _id: 1 } }],
+  },
+  family_requests: {
+    fields: [
+      { name: 'familyId', type: 'string', required: true, description: '家庭ID' },
+      { name: 'userId', type: 'string', required: true, description: '申请人' },
+      { name: 'type', type: 'string', description: 'join/identity_change/child_attach' },
+      { name: 'payload', type: 'object', description: '申请内容' },
+      { name: 'status', type: 'string', description: 'pending/approved/rejected/cancelled' },
+      { name: 'version', type: 'number', description: '并发版本' },
+    ],
+    indexes: [
+      { name: 'idx_request_family', fields: { familyId: 1, status: 1, _id: 1 } },
+      { name: 'idx_request_user', fields: { userId: 1, _id: 1 } },
+    ],
+  },
+  family_audit_logs: {
+    fields: [
+      { name: 'familyId', type: 'string', required: true, description: '家庭ID' },
+      { name: 'actorId', type: 'string', required: true, description: '操作者' },
+      { name: 'action', type: 'string', description: '操作类型' },
+      { name: 'before', type: 'object', description: '变更前' },
+      { name: 'after', type: 'object', description: '变更后' },
+    ],
+    indexes: [{ name: 'idx_audit_family', fields: { familyId: 1, createdAt: -1 } }],
+  },
+  family_operations: {
+    fields: [
+      { name: 'userId', type: 'string', required: true, description: '幂等归属用户' },
+      { name: 'action', type: 'string', description: '操作' },
+      { name: 'response', type: 'object', description: '幂等响应' },
+    ],
+    indexes: [],
+  },
+  vaccine_completion_events: {
+    fields: [
+      { name: 'familyId', type: 'string', required: true, description: '家庭ID' },
+      { name: 'childId', type: 'string', required: true, description: '宝宝ID' },
+      { name: 'vaccineId', type: 'string', required: true, description: '计划ID' },
+      { name: 'createdBy', type: 'string', required: true, description: '接种事件记录人' },
+    ],
+    indexes: [{ name: 'idx_completion_child', fields: { familyId: 1, childId: 1 } }],
+  },
+} satisfies Record<string, CollectionSchema>)

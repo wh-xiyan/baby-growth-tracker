@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { assertFamilyAccess } from './permissions'
 import type { GrowthRecord } from '../types/record'
 import { callCloudFunction, isCloudConfigured } from './cloud'
 import { dayStart, isMeasurement } from '../utils/home'
@@ -17,6 +18,7 @@ export async function getHomeOverview(input: {
   childId: string
   date: string
 }): Promise<HomeOverview> {
+  assertFamilyAccess(input.familyId, input.childId)
   if (isCloudConfigured()) return callCloudFunction<HomeOverview>('getHomeOverview', input)
   const records = ((Taro.getStorageSync('baby-growth-demo-records') || []) as GrowthRecord[])
     .filter((item) => item.familyId === input.familyId && item.childId === input.childId)

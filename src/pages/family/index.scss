@@ -1,0 +1,174 @@
+.family-page {
+  min-height: 100vh;
+  background: #f7f5ec;
+  padding: 20px 22px 50px;
+  color: #34463b;
+  box-sizing: border-box;
+  .family-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 28px;
+    .family-heading-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #34463b;
+    }
+    button {
+      padding: 0;
+      background: transparent;
+      font-size: 14px;
+      color: #496f56;
+    }
+  }
+  button::after {
+    border: 0;
+  }
+  .family-badge {
+    display: inline-block;
+    margin: 12px 0;
+    padding: 5px 12px;
+    border-radius: 18px;
+    background: #e4eddf;
+    color: #496f56;
+    font-size: 12px;
+  }
+  .family-title {
+    display: block;
+    font-size: 27px;
+    font-weight: 650;
+    margin: 10px 0 16px;
+  }
+  .family-subtitle {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .family-muted {
+    display: block;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #778279;
+  }
+  .family-label {
+    display: block;
+    font-size: 13px;
+    margin: 20px 0 8px;
+  }
+  .family-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 13px 12px;
+    background: #e9ede3;
+    border-radius: 12px;
+    color: #496f56;
+    font-size: 13px;
+    line-height: 1.7;
+    radio {
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+  }
+  .family-picker,
+  input {
+    display: block;
+    padding: 14px;
+    background: white;
+    border: 1px solid #dde2d5;
+    border-radius: 11px;
+    min-height: 22px;
+    margin: 8px 0;
+  }
+  .family-card {
+    background: white;
+    border-radius: 17px;
+    padding: 20px;
+    margin: 18px 0;
+  }
+  .family-notice {
+    padding: 15px 17px;
+    background: #faf0d7;
+    border-radius: 13px;
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 18px 0;
+  }
+  .family-primary,
+  .family-secondary {
+    padding: 10px 16px;
+    line-height: 1.8;
+    border-radius: 12px;
+    font-size: 14px;
+    margin: 12px 0;
+  }
+  .family-primary {
+    background: #496f56;
+    color: white;
+  }
+  .family-secondary {
+    background: #e9ede3;
+    color: #496f56;
+  }
+  button[disabled] {
+    opacity: 0.45;
+  }
+  .family-row {
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 17px 0;
+    border-bottom: 1px solid #e8e9df;
+    text-align: left;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .family-count {
+    font-size: 23px;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .family-identities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0;
+    button {
+      width: 47%;
+      padding: 12px 8px;
+      border: 1px solid #e8e9df;
+      border-radius: 12px;
+      font-size: 14px;
+      background: white;
+      line-height: 1.6;
+    }
+    .selected {
+      border: 2px solid #628363;
+      background: #edf3e9;
+    }
+  }
+  .family-actions {
+    display: flex;
+    gap: 10px;
+    button {
+      flex: 1;
+    }
+  }
+  .family-error {
+    padding: 15px;
+    background: #fae6df;
+    color: #9b4d3d;
+    border-radius: 12px;
+    font-size: 13px;
+    margin: 18px 0;
+  }
+  .family-footnote {
+    display: block;
+    font-size: 11px;
+    color: #778279;
+    margin-top: 24px;
+  }
+}

@@ -35,6 +35,7 @@ import type { DailyRecord } from '../../services/records'
 import { MediaThumbnail } from '../../components/media/MediaThumbnail'
 import { GrowthReferenceChart } from './components/GrowthReferenceChart'
 import { useGrowthData } from './useGrowthData'
+import { FamilyIdentity } from '../../components/FamilyIdentity'
 import './index.scss'
 
 export default function Growth() {
@@ -42,7 +43,7 @@ export default function Growth() {
     useSessionStore()
   const child = children.find((c) => c.id === childId),
     today = localDate(),
-    canAdd = currentRole === 'owner' || currentRole === 'adult'
+    canAdd = currentRole === 'owner' || currentRole === 'admin' || currentRole === 'adult'
   const [workspace, setWorkspace] = useState<GrowthWorkspace>('measurement'),
     [history, setHistory] = useState(false)
   const [metric, setMetric] = useState<GrowthMetric>('height'),
@@ -193,6 +194,7 @@ export default function Growth() {
     })
   return (
     <View className='growth-page'>
+      <FamilyIdentity />
       {refreshing && (
         <View className='growth-empty' role='status'>
           正在刷新成长记录…

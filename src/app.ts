@@ -28,6 +28,7 @@ function App(props: PropsWithChildren) {
         }),
       )
       .catch((error) => {
+        setSession({ sessionError: '登录初始化失败' })
         console.error('云端登录初始化失败，请查看控制台', error)
         Taro.showToast({ title: '登录初始化失败', icon: 'none' })
       })

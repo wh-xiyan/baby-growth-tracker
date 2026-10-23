@@ -1,4 +1,4 @@
-export type FamilyRole = 'owner' | 'adult' | 'viewer'
+export type FamilyRole = 'owner' | 'admin' | 'adult' | 'viewer'
 export interface User {
   id: string
   openid?: string
@@ -14,6 +14,9 @@ export interface FamilyMember {
   role: FamilyRole
   displayName: string
   status: 'active' | 'removed'
+  relationshipCode?: string
+  version?: number
+  permissionSource?: string
   joinedAt: string
 }
 export interface Family {
@@ -23,4 +26,23 @@ export interface Family {
   inviteCode?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface FamilyRequest {
+  id: string
+  userId: string
+  familyId: string
+  type: 'join' | 'identity_change' | 'child_attach'
+  payload: { displayName?: string; identity?: string; role?: FamilyRole; childId?: string }
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled'
+  version: number
+  createdAt: string
+}
+export interface FamilyOverview {
+  legacyFamilies?: { id: string; name: string; role: FamilyRole }[]
+  personalChildren: import('./child').Child[]
+  members: FamilyMember[]
+  requests: FamilyRequest[]
+  familyRequests: FamilyRequest[]
+  invitations: { id: string; expiresAt: string; usedCount: number; maxUses: number }[]
 }

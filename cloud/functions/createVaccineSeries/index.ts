@@ -34,7 +34,7 @@ export async function main(event: {
     throw new Error('INVALID_VACCINE_SERIES')
   }
 
-  const member = await activeMember(familyId, context())
+  const member = await activeMember(familyId, context(), true)
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
 
   const child = await db.collection('children').where({ _id: childId, familyId }).limit(1).get()

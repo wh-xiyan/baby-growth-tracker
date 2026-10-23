@@ -44,12 +44,16 @@ export function vaccineSeries(records: Vaccine[], selected: Vaccine) {
 }
 export function vaccineError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error)
+  if (message.includes('CONFLICT')) return '记录已变化，请刷新后重试'
+  if (message.includes('FORBIDDEN')) return '仅管理员或记录本人可以修改，请同步家庭权限'
+  if (message.includes('COMPLETION_DATE_IMMUTABLE'))
+    return '接种日期需通过删除后重新记录更正，避免影响剂次顺序'
   if (message.includes('PREVIOUS_DOSE_NOT_COMPLETED')) return '请先完成前序剂次的接种记录'
   if (message.includes('INTERVAL_INVALID')) return '计划日期不符合剂次间隔要求，请核对日期'
   if (message.includes('COMPLETED_DATE_INVALID')) return '实际接种日期不能早于上一针接种日期'
   if (message.includes('DATE_INVALID')) return '计划日期不能晚于下一针计划日期'
   if (message.includes('IMMUTABLE') || message.includes('NOT_COMPLETABLE'))
     return '当前接种状态已变化，请关闭弹窗并刷新详情'
-  if (message.includes('FORBIDDEN')) return '当前没有操作权限，请同步家庭权限后重试'
+  if (message.includes('LATER_DOSES_EXIST')) return '后续剂次已有接种记录，不能删除此接种记录'
   return '操作失败，请检查信息后重试'
 }

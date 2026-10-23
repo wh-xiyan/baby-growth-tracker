@@ -1,176 +1,94 @@
-import { Button, Input, Picker, Text, View } from '@tarojs/components'
+import { Button, Input, Picker, Radio, RadioGroup, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useMemo, useState } from 'react'
-import { createFamilyAndChild } from '../../services/auth'
+import { useState } from 'react'
+import { familyAction, familyError } from '../../services/family'
 import { useSessionStore } from '../../stores/session'
-import { PageLoading } from '../../components/page-loading'
-import './index.scss'
-
-type Gender = 'male' | 'female' | 'unknown'
-
-const today = () => {
-  const date = new Date()
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
+import { localDate } from '../../utils/home'
+import '../family/index.scss'
 
 export default function Onboarding() {
-  const setSession = useSessionStore((state) => state.setSession)
-  const initialized = useSessionStore((state) => state.initialized)
-  const [familyName, setFamilyName] = useState('我们的家')
-  const [childName, setChildName] = useState('')
-  const [birthday, setBirthday] = useState('')
-  const [gender, setGender] = useState<Gender>('unknown')
-  const [agreed, setAgreed] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const birthdayLabel = useMemo(
-    () => (birthday ? birthday.replace(/-/g, ' / ') : '请选择出生日期'),
-    [birthday],
-  )
-
-  const submit = async () => {
-    if (!familyName.trim() || !childName.trim() || !birthday)
-      return Taro.showToast({ title: '请完善家庭和宝宝信息', icon: 'none' })
-    if (!agreed) return Taro.showToast({ title: '请先同意用户协议与隐私政策', icon: 'none' })
-    setSubmitting(true)
+  const { initialized, familyId } = useSessionStore()
+  const [name, setName] = useState(''),
+    [birthday, setBirthday] = useState(''),
+    [gender, setGender] = useState('unknown'),
+    [agreed, setAgreed] = useState(false),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState('')
+  const save = async () => {
+    if (busy || !agreed) return
+    setBusy(true)
+    setError('')
     try {
-      const session = await createFamilyAndChild(familyName.trim(), {
-        name: childName.trim(),
-        birthday,
-        gender,
-      })
-      setSession({
-        ...session,
-        userId: session.user.id,
-        familyId: session.family?.id,
-        childId: session.currentChildId,
-        currentRole: session.currentRole,
-      })
-      Taro.showToast({ title: session.isDemo ? '已创建本地演示档案' : '创建成功', icon: 'none' })
-      setTimeout(() => Taro.switchTab({ url: '/pages/home/index' }), 500)
-    } catch {
-      Taro.showToast({ title: '创建失败，请稍后重试', icon: 'none' })
+      await familyAction('savePersonalChild', { data: { name, birthday, gender } })
+      Taro.showToast({ title: '档案已保存', icon: 'success' })
+      await Taro.switchTab({ url: '/pages/home/index' })
+    } catch (cause) {
+      setError(familyError(cause))
     } finally {
-      setSubmitting(false)
+      setBusy(false)
     }
   }
-
-  if (!initialized) return <PageLoading title='正在准备你的小家' caption='马上就好' />
-
   return (
-    <View className='onboarding-page'>
-      <View className='onboarding-spot spot-yellow' />
-      <View className='onboarding-spot spot-blue' />
-      <View className='welcome'>
-        <View className='welcome-copy'>
-          <View className='eyebrow'>
-            WELCOME HOME <Text className='eyebrow-dot'>·</Text>
-          </View>
-          <View className='welcome-title'>开启爱的记录</View>
-          <View className='welcome-subtitle'>先为宝宝建立一个专属的小家吧</View>
-        </View>
-        <View className='welcome-illustration' aria-label='温馨的小家'>
-          <View className='cloud cloud-left' />
-          <View className='cloud cloud-right' />
-          <View className='sun'>☀</View>
-          <View className='house'>
-            <View className='roof' />
-            <View className='house-body'>
-              <View className='window' />
-              <View className='door' />
-            </View>
-          </View>
-          <View className='heart'>♥</View>
-        </View>
-      </View>
-      <View className='setup-card'>
-        <View className='card-heading'>
-          <View className='card-title'>建立宝宝档案</View>
-          <View className='card-progress'>
-            1 <Text>/</Text> 1
-          </View>
-        </View>
-        <View className='card-caption'>这些信息只为你们的家服务</View>
-        <View className='form-group'>
-          <View className='form-label'>
-            <Text className='label-icon'>⌂</Text> 家庭名称
-          </View>
-          <Input
-            className='form-input'
-            value={familyName}
-            onInput={(e) => setFamilyName(e.detail.value)}
-            placeholder='例如：我们的小家'
-            maxlength={30}
-          />
-          <View className='field-hint'>这是你们共同守护的空间</View>
-        </View>
-        <View className='form-group'>
-          <View className='form-label'>
-            <Text className='label-icon'>♡</Text> 宝宝昵称
-          </View>
-          <Input
-            className='form-input'
-            value={childName}
-            onInput={(e) => setChildName(e.detail.value)}
-            placeholder='请输入宝宝的小名'
-            maxlength={20}
-          />
-        </View>
-        <View className='form-group'>
-          <View className='form-label'>
-            <Text className='label-icon'>✦</Text> 出生日期
-          </View>
-          <Picker
-            mode='date'
-            value={birthday || today()}
-            end={today()}
-            onChange={(e) => setBirthday(e.detail.value)}
-          >
-            <View className='form-input picker-input'>
-              <Text className={birthday ? '' : 'placeholder'}>{birthdayLabel}</Text>
-              <Text className='chevron'>›</Text>
-            </View>
-          </Picker>
-        </View>
-        <View className='form-group gender-group'>
-          <View className='form-label'>
-            <Text className='label-icon'>✿</Text> 宝宝性别
-          </View>
-          <View className='gender-options'>
-            <View
-              className={`gender-option gender-male ${gender === 'male' ? 'selected' : ''}`}
-              onClick={() => setGender('male')}
-            >
-              <View className='gender-symbol'>♂</View>
-              <View className='gender-name'>男宝宝</View>
-              <View className='gender-check'>✓</View>
-            </View>
-            <View
-              className={`gender-option gender-female ${gender === 'female' ? 'selected' : ''}`}
-              onClick={() => setGender('female')}
-            >
-              <View className='gender-symbol'>♀</View>
-              <View className='gender-name'>女宝宝</View>
-              <View className='gender-check'>✓</View>
-            </View>
-          </View>
-        </View>
-        <View className={`agreement ${agreed ? 'checked' : ''}`} onClick={() => setAgreed(!agreed)}>
-          <View className='agreement-box'>{agreed ? '✓' : ''}</View>
-          <View className='agreement-text'>
-            我已阅读并同意 <Text className='agreement-link'>《用户协议》</Text> 与{' '}
-            <Text className='agreement-link'>《隐私政策》</Text>
-          </View>
-        </View>
-        <Button
-          className='create-button'
-          loading={submitting}
-          disabled={submitting}
-          onClick={submit}
+    <View className='family-page'>
+      <Text className='family-title'>先认识一下宝宝</Text>
+      <Text className='family-muted'>
+        建立个人待关联档案，仅你可见。关联家庭后，才能共同记录成长。
+      </Text>
+      <View className='family-card'>
+        <Text className='family-label'>宝宝昵称</Text>
+        <Input
+          maxlength={50}
+          value={name}
+          onInput={(e) => setName(e.detail.value)}
+          placeholder='请输入宝宝昵称'
+        />
+        <Text className='family-label'>出生日期</Text>
+        <Picker
+          mode='date'
+          value={birthday || localDate()}
+          end={localDate()}
+          onChange={(e) => setBirthday(e.detail.value)}
         >
-          完成创建，开始记录 <Text className='button-arrow'>→</Text>
+          <View className='family-picker'>{birthday || '请选择日期'}</View>
+        </Picker>
+        <Text className='family-label'>生长参考使用的性别</Text>
+        <Picker
+          range={['暂不填写', '男童', '女童']}
+          onChange={(e) => setGender(['unknown', 'male', 'female'][Number(e.detail.value)])}
+        >
+          <View className='family-picker'>
+            {gender === 'male' ? '男童' : gender === 'female' ? '女童' : '暂不填写'}
+          </View>
+        </Picker>
+        <Text className='family-muted'>性别仅用于生长标准参考，不影响页面配色。</Text>
+        <RadioGroup onChange={(event) => setAgreed(event.detail.value === 'agreed')}>
+          <View className='family-consent'>
+            <Radio value='agreed' checked={agreed} color='#496f56' />
+            <Text>我已知晓档案仅用于宝宝成长记录，家庭关联前仅本人可见。</Text>
+          </View>
+        </RadioGroup>
+        <Button
+          className='family-primary'
+          disabled={!initialized || !agreed || busy || !name.trim() || !birthday}
+          loading={busy}
+          onClick={save}
+        >
+          保存个人档案
         </Button>
       </View>
-      <View className='safe-note'>🔒 你的数据仅用于记录和陪伴成长</View>
+      <View className='family-notice'>
+        个人档案不能新增照护、成长、疫苗或媒体记录。
+        {familyId
+          ? '新个人档案可在家庭页申请归入家庭。'
+          : '你也可以先接受家人的邀请，避免重复建档。'}
+      </View>
+      <Button
+        className='family-secondary'
+        onClick={() => Taro.navigateTo({ url: '/pages/family/index' })}
+      >
+        关联家庭 / 接受邀请
+      </Button>
+      {error && <View className='family-error'>{error}</View>}
     </View>
   )
 }

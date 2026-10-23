@@ -1,6 +1,7 @@
 import { create } from 'zustand'
+import Taro from '@tarojs/taro'
 import type { Child } from '../types/child'
-import type { Family, FamilyRole, User } from '../types/family'
+import type { Family, FamilyMember, FamilyRole, User } from '../types/family'
 
 interface SessionState {
   user?: User
@@ -10,6 +11,10 @@ interface SessionState {
   familyId?: string
   childId?: string
   currentRole?: FamilyRole
+  membership?: FamilyMember
+  personalChildren?: Child[]
+  membershipIssue?: string
+  sessionError?: string
   initialized: boolean
   setInitialized: (initialized: boolean) => void
   setSession: (session: Partial<SessionState>) => void
@@ -21,7 +26,15 @@ export const useSessionStore = create<SessionState>((set) => ({
   initialized: false,
   setInitialized: (initialized) => set({ initialized }),
   setSession: (session) => set(session),
-  setCurrentChild: (childId) => set({ childId }),
+  setCurrentChild: (childId) =>
+    set((state) => {
+      if (!state.children.some((child) => child.id === childId)) return {}
+      Taro.setStorageSync(
+        `baby-growth-last-child-${state.userId}-${state.familyId || 'personal'}`,
+        childId,
+      )
+      return { childId }
+    }),
   clear: () =>
     set({
       user: undefined,
@@ -31,6 +44,9 @@ export const useSessionStore = create<SessionState>((set) => ({
       familyId: undefined,
       childId: undefined,
       currentRole: undefined,
+      membership: undefined,
+      personalChildren: [],
+      membershipIssue: undefined,
       initialized: false,
     }),
 }))

@@ -21,7 +21,10 @@ export const canManageRecord = (
   role: FamilyRole | undefined,
   userId: string | undefined,
   record: DailyRecord,
-) => role === 'owner' || (role === 'adult' && Boolean(userId) && record.createdBy === userId)
+) =>
+  role === 'owner' ||
+  role === 'admin' ||
+  (role === 'adult' && Boolean(userId) && record.createdBy === userId)
 
 /** Calendar month age; month-end anniversaries clamp to the last day of the target month. */
 export function growthAge(birthday: string | undefined, date: string) {

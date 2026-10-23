@@ -27,7 +27,11 @@ export function assertRecordManager(
   member: { role: string; userId: string },
   record: { createdBy?: string },
 ) {
-  if (member.role !== 'owner' && !(member.role === 'adult' && record.createdBy === member.userId))
+  if (
+    member.role !== 'owner' &&
+    member.role !== 'admin' &&
+    !(member.role === 'adult' && record.createdBy === member.userId)
+  )
     throw new Error('FORBIDDEN')
 }
 export function assertVersion(existing: { version?: number }, expectedVersion: unknown) {

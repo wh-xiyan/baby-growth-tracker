@@ -2,7 +2,7 @@ import { db, now, context, activeMember, result } from '../../shared/db'
 export async function main(event: Record<string, unknown>) {
   const openid = context()
   const familyId = String(event.familyId || '')
-  const member = await activeMember(familyId, openid)
+  const member = await activeMember(familyId, openid, true)
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
   if (
     !event.childId ||

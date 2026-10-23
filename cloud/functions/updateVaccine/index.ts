@@ -12,12 +12,14 @@ export async function main(event: {
   data?: Record<string, unknown>
 }) {
   const familyId = String(event?.familyId || '')
-  const member = await activeMember(familyId, context())
+  const member = await activeMember(familyId, context(), true)
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
   if (!event.vaccineId || !event.data) throw new Error('INVALID_VACCINE')
 
   const vaccine = await db.collection('vaccines').doc(event.vaccineId).get()
   if (!vaccine.data || vaccine.data.familyId !== familyId) throw new Error('VACCINE_NOT_FOUND')
+  if (!['owner', 'admin'].includes(member.role) && vaccine.data.createdBy !== member.userId)
+    throw new Error('FORBIDDEN')
   if (vaccine.data.status === 'completed') throw new Error('COMPLETED_VACCINE_IMMUTABLE')
 
   const data = event.data

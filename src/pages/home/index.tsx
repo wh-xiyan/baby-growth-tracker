@@ -14,6 +14,7 @@ import { GrowthChart } from '../../components/growth-chart'
 import growthTree from '../../assets/growth-tree.png'
 import { completeVaccine, consumeVaccineUpdate, listHomeReminders } from '../../services/vaccines'
 import type { HomeReminder } from '../../types/vaccine'
+import { FamilyIdentity, GuestHome } from '../../components/FamilyIdentity'
 import './index.scss'
 
 const todayKey = () => localDate()
@@ -68,7 +69,7 @@ export default function Home() {
   )
   const care = useMemo(() => todayCare(overview.careRecords, localDate()), [overview])
   const points = useMemo(() => measurementPoints(overview.measurements, metric), [overview, metric])
-  const canEdit = currentRole === 'owner' || currentRole === 'adult'
+  const canEdit = currentRole === 'owner' || currentRole === 'admin' || currentRole === 'adult'
 
   const refreshSession = async () => {
     if (sessionRefreshing) return
@@ -140,7 +141,7 @@ export default function Home() {
   }, [childId, familyId, initialized])
 
   useEffect(() => {
-    if (initialized && !familyId) Taro.navigateTo({ url: '/pages/onboarding/index' })
+    // Guests remain in their personal space until they choose to associate a family.
   }, [familyId, initialized])
 
   useEffect(() => {
@@ -204,13 +205,14 @@ export default function Home() {
     Taro.navigateTo({ url: `/pages/record-edit/index${category ? `?category=${category}` : ''}` })
   }
   if (!initialized) return <PageLoading title='正在准备你的小家' caption='马上就好' />
-  if (!familyId) return null
+  if (!familyId) return <GuestHome />
 
   const age = child ? ageOf(child.birthday) : '还未设置'
 
   return (
     <View className='home-page'>
       <View className='home-content'>
+        <FamilyIdentity />
         <View className='home-header'>
           <View className='home-brand'>
             <Icon name='sapling' size={24} color='#7FA68A' />

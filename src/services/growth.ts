@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { assertFamilyAccess } from './permissions'
 import { callCloudFunction, isCloudConfigured } from './cloud'
 import { useSessionStore } from '../stores/session'
 import {
@@ -27,6 +28,7 @@ function demoRecords(): DailyRecord[] {
   }))
 }
 export async function listGrowthRecords(input: GrowthQuery): Promise<GrowthPage> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? input.childId : undefined)
   if (isCloudConfigured())
     return callCloudFunction<GrowthPage>(
       'listGrowthRecords',
@@ -93,12 +95,13 @@ function markChanged() {
   requestHomeRecordsRefresh()
 }
 export async function saveGrowthRecord(input: CreateRecordInput, existing?: DailyRecord) {
+  assertFamilyAccess(input.familyId, 'childId' in input ? input.childId : undefined, true)
   if (!isCloudConfigured()) {
     const session = useSessionStore.getState()
     if (
       session.familyId !== input.familyId ||
       session.childId !== input.childId ||
-      !['owner', 'adult'].includes(session.currentRole || '')
+      !['owner', 'admin', 'adult'].includes(session.currentRole || '')
     )
       throw new Error('FORBIDDEN')
   }
@@ -107,7 +110,15 @@ export async function saveGrowthRecord(input: CreateRecordInput, existing?: Dail
     markChanged()
     return result
   }
-  const { familyId, childId, ...data } = input
+  const { familyId, childId } = input
+  const data = {
+    category: input.category,
+    title: input.title,
+    occurredAt: input.occurredAt,
+    content: input.content || '',
+    metrics: input.metrics || {},
+    mediaFileIds: input.mediaFileIds || [],
+  }
   if (existing.childId !== childId || existing.familyId !== familyId) throw new Error('NOT_FOUND')
   if (isCloudConfigured()) {
     const result = await callCloudFunction<{ id: string }>('updateRecord', {
@@ -131,7 +142,13 @@ export async function saveGrowthRecord(input: CreateRecordInput, existing?: Dail
     KEY,
     all.map((r) =>
       r.id === existing.id
-        ? { ...r, ...input, version: (r.version || 0) + 1, updatedAt: new Date().toISOString() }
+        ? {
+            ...r,
+            ...input,
+            createdBy: r.createdBy,
+            version: (r.version || 0) + 1,
+            updatedAt: new Date().toISOString(),
+          }
         : r,
     ),
   )
@@ -139,6 +156,7 @@ export async function saveGrowthRecord(input: CreateRecordInput, existing?: Dail
   return { id: existing.id }
 }
 export async function deleteGrowthRecord(record: DailyRecord) {
+  assertFamilyAccess(record.familyId, record.childId, true)
   if (isCloudConfigured()) {
     const result = await callCloudFunction<{ mediaCleanupPending?: boolean }>('deleteRecord', {
       familyId: record.familyId,

@@ -3,10 +3,12 @@ import { activeMember, context, db, now, result } from '../../shared/db'
 export async function main(event: { familyId?: string; vaccineId?: string; force?: boolean }) {
   const familyId = String(event?.familyId || '')
   if (!familyId || !event?.vaccineId) throw new Error('INVALID_VACCINE')
-  const member = await activeMember(familyId, context())
+  const member = await activeMember(familyId, context(), true)
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
   const vaccine = await db.collection('vaccines').doc(event.vaccineId).get()
   if (!vaccine.data || vaccine.data.familyId !== familyId) throw new Error('VACCINE_NOT_FOUND')
+  if (!['owner', 'admin'].includes(member.role) && vaccine.data.createdBy !== member.userId)
+    throw new Error('FORBIDDEN')
   if (vaccine.data.status === 'completed') throw new Error('COMPLETED_VACCINE_IMMUTABLE')
 
   const siblings = await db

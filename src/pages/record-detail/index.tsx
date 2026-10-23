@@ -8,8 +8,9 @@ import { localDate, localTime, isMeasurement } from '../../utils/home'
 import { careTitle, careValue, detailMetrics } from '../../utils/care-records'
 import { MediaThumbnail } from '../../components/media/MediaThumbnail'
 import { categoryMeta } from '../record-list/constants'
-import { canManageRecord, growthAgeLabel, growthError, isGrowthEvent } from '../../utils/growth'
+import { canManageRecord, growthAgeLabel, growthError } from '../../utils/growth'
 import { deleteGrowthRecord } from '../../services/growth'
+import { FamilyIdentity } from '../../components/FamilyIdentity'
 import './index.scss'
 
 export default function RecordDetail() {
@@ -22,10 +23,9 @@ export default function RecordDetail() {
   const [deleting, setDeleting] = useState(false)
   const deletePending = useRef(false)
   const child = children.find((c) => c.id === childId)
-  const growthRecord = record && (isMeasurement(record) || isGrowthEvent(record))
+
   const canManage = Boolean(
-    growthRecord &&
-      record &&
+    record &&
       record.familyId === familyId &&
       record.childId === childId &&
       canManageRecord(currentRole, userId, record),
@@ -62,9 +62,9 @@ export default function RecordDetail() {
     deletePending.current = true
     try {
       const answer = await Taro.showModal({
-        title: '删除这条成长记录？',
+        title: '删除这条记录？',
         content:
-          '删除后将从成长档案与首页摘要中移除，并永久删除对应照片和视频，无法恢复。其他记录仍在使用的媒体会保留。',
+          '删除后将从记录列表与首页摘要中移除，并永久删除对应照片和视频，无法恢复。其他记录仍在使用的媒体会保留。',
         confirmText: '删除',
         confirmColor: '#a4513e',
       })
@@ -87,6 +87,7 @@ export default function RecordDetail() {
   }
   return (
     <View className='care-detail-page'>
+      <FamilyIdentity />
       {loading ? (
         <Text className='care-detail-state'>正在加载记录…</Text>
       ) : error || !record ? (
@@ -114,7 +115,7 @@ export default function RecordDetail() {
               label='记录时间'
               value={`${localDate(record.occurredAt)} ${localTime(record.occurredAt)}`}
             />
-            {growthRecord && (
+            {record && (
               <Field
                 label='当时年龄'
                 value={growthAgeLabel(child?.birthday, localDate(record.occurredAt))}
@@ -153,7 +154,7 @@ export default function RecordDetail() {
               </View>
             </View>
           )}
-          {growthRecord && (
+          {record && (
             <View className='growth-detail-management'>
               <Text className='growth-detail-permission'>
                 {canManage

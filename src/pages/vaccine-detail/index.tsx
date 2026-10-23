@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePageDidShow } from '../../services/media-preview'
 import {
   completeVaccine,
+  manageVaccineCompletion,
   getVaccine,
   listVaccines,
   updateVaccinePlan,
@@ -18,6 +19,8 @@ import {
   vaccineSeries,
   vaccineStatus,
 } from '../../utils/vaccine-detail'
+import { canManage } from '../../domain/family'
+import { FamilyIdentity } from '../../components/FamilyIdentity'
 import './index.scss'
 
 type Sheet = 'edit' | 'complete' | 'series'
@@ -45,7 +48,13 @@ export default function VaccineDetail() {
   const scope = `${familyId}|${childId}|${selectedId}`
   const scopeRef = useRef(scope)
   scopeRef.current = scope
-  const canEdit = currentRole === 'owner' || currentRole === 'adult'
+  const canEdit = currentRole === 'owner' || currentRole === 'admin' || currentRole === 'adult'
+  const canEditPlan = canManage(currentRole, useSessionStore.getState().userId, vaccine?.createdBy)
+  const canEditCompletion = canManage(
+    currentRole,
+    useSessionStore.getState().userId,
+    vaccine?.completedBy,
+  )
   const today = localDate()
   const load = useCallback(async () => {
     const request = ++sequence.current
@@ -94,12 +103,19 @@ export default function VaccineDetail() {
     }
   }
   const openForm = (kind: 'edit' | 'complete') => {
-    if (!vaccine || !canEdit || vaccine.status !== 'planned' || saving) return
-    setDate(kind === 'edit' ? vaccine.plannedDate : today)
+    if (
+      !vaccine ||
+      !canEdit ||
+      saving ||
+      (kind === 'edit' && !canEditPlan) ||
+      (vaccine.status === 'completed' && !canEditCompletion)
+    )
+      return
+    setDate(kind === 'edit' ? vaccine.plannedDate : vaccine.completedDate || today)
     setInstitution(vaccine.institution || '')
     setPayment(vaccine.paymentType || 'free')
     setPaidNote(vaccine.selfPaidVaccineNote || '')
-    setNote('')
+    setNote(vaccine.completedNote || '')
     setFormError('')
     setSheet(kind)
   }
@@ -129,7 +145,7 @@ export default function VaccineDetail() {
       !vaccine ||
       !canEdit ||
       saving ||
-      vaccine.status !== 'planned' ||
+      (vaccine.status !== 'planned' && !(sheet === 'complete' && canEditCompletion)) ||
       (sheet !== 'edit' && sheet !== 'complete')
     )
       return
@@ -144,7 +160,17 @@ export default function VaccineDetail() {
     setSaving(true)
     setFormError('')
     try {
-      if (kind === 'edit')
+      if (kind === 'complete' && vaccine.status === 'completed')
+        await manageVaccineCompletion({
+          familyId,
+          vaccineId: vaccine.id,
+          action: 'update',
+          expectedVersion: vaccine.completionVersion || 0,
+          completedDate: date,
+          institution: institution.trim(),
+          note: note.trim(),
+        })
+      else if (kind === 'edit')
         await updateVaccinePlan({
           familyId,
           vaccineId: vaccine.id,
@@ -178,6 +204,7 @@ export default function VaccineDetail() {
   const status = vaccine ? vaccineStatus(vaccine, today) : undefined
   return (
     <View className='vaccine-detail-page'>
+      <FamilyIdentity />
       {loading ? (
         <View className='vd-state'>正在加载疫苗详情…</View>
       ) : error || !vaccine ? (
@@ -262,11 +289,50 @@ export default function VaccineDetail() {
             )}
             {canEdit && vaccine.status === 'planned' ? (
               <View className='vd-actions'>
-                <Button className='vd-secondary' onClick={() => openForm('edit')}>
+                <Button
+                  className='vd-secondary'
+                  disabled={!canEditPlan}
+                  onClick={() => openForm('edit')}
+                >
                   调整计划
                 </Button>
                 <Button className='vd-primary' onClick={() => openForm('complete')}>
                   记录已接种
+                </Button>
+              </View>
+            ) : vaccine.status === 'completed' && canEditCompletion ? (
+              <View className='vd-actions'>
+                <Button className='vd-secondary' onClick={() => openForm('complete')}>
+                  编辑接种记录
+                </Button>
+                <Button
+                  className='vd-primary'
+                  disabled={saving}
+                  onClick={async () => {
+                    if (!familyId) return
+                    const answer = await Taro.showModal({
+                      title: '删除接种记录？',
+                      content: '将恢复为待接种计划；后续剂次已接种时不能删除。',
+                    })
+                    if (!answer.confirm) return
+                    setSaving(true)
+                    try {
+                      await manageVaccineCompletion({
+                        familyId,
+                        vaccineId: vaccine.id,
+                        action: 'delete',
+                        expectedVersion: vaccine.completionVersion || 0,
+                      })
+                      await load()
+                    } catch (cause) {
+                      setFormError(vaccineError(cause))
+                      Taro.showToast({ title: vaccineError(cause), icon: 'none' })
+                    } finally {
+                      setSaving(false)
+                    }
+                  }}
+                >
+                  删除接种记录
                 </Button>
               </View>
             ) : (

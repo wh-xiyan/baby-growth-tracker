@@ -8,8 +8,8 @@ export async function main(event: {
 }) {
   const openid = context()
   const familyId = String(event?.familyId || '')
-  const member = await activeMember(familyId, openid)
-  if (!['owner', 'adult'].includes(member.role)) throw new Error('FORBIDDEN')
+  const member = await activeMember(familyId, openid, true)
+  if (!['owner', 'admin'].includes(member.role)) throw new Error('FORBIDDEN')
   if (!event.childId || !event.data) throw new Error('INVALID_CHILD')
   await ownedDocument('children', event.childId, familyId)
   const data = event.data

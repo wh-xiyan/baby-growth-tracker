@@ -5,7 +5,7 @@ export async function main(event: Record<string, unknown>) {
   const openid = context()
   const familyId = String(event.familyId || '')
   if (!familyId) throw new Error('INVALID_FAMILY')
-  const member = await activeMember(familyId, openid)
+  const member = await activeMember(familyId, openid, true)
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
   if (!event.childId || !event.category || !event.title || !event.occurredAt)
     throw new Error('INVALID_RECORD')

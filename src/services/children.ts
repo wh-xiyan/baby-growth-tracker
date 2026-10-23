@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { familyAction } from './family'
 import { callCloudFunction, isCloudConfigured } from './cloud'
 import { useSessionStore } from '../stores/session'
 import type { Child } from '../types/child'
@@ -9,9 +10,13 @@ export async function updateChildProfile(
   data: Pick<Child, 'name' | 'birthday' | 'gender'>,
 ) {
   const session = useSessionStore.getState()
+  if (child.scope === 'personal') {
+    await familyAction('savePersonalChild', { childId: child.id, data })
+    return
+  }
   if (
     session.familyId !== child.familyId ||
-    !['owner', 'adult'].includes(session.currentRole || '')
+    !['owner', 'admin'].includes(session.currentRole || '')
   )
     throw new Error('FORBIDDEN')
   if (isCloudConfigured())

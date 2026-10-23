@@ -9,7 +9,7 @@ export async function main(event: {
 }) {
   const openid = context()
   const familyId = String(event?.familyId || '')
-  const member = await activeMember(familyId, openid)
+  const member = await activeMember(familyId, openid, true)
   if (member.role === 'viewer') throw new Error('FORBIDDEN')
   if (!event.recordId || !event.data) throw new Error('INVALID_RECORD')
   const existing = await ownedDocument('growth_records', event.recordId, familyId)

@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { assertFamilyAccess } from './permissions'
 import { callCloudFunction, isCloudConfigured } from './cloud'
 
 const isDirectMediaUrl = (fileId: string) =>
@@ -15,6 +16,7 @@ export async function resolveMediaUrl(
 }
 
 export async function resolveMediaUrls(familyId: string, fileIds: string[]): Promise<string[]> {
+  assertFamilyAccess(familyId)
   const uniqueFileIds = [...new Set(fileIds.filter(Boolean))]
   if (!uniqueFileIds.length) return []
   const resolvedUrls = new Map(
@@ -41,6 +43,7 @@ export async function uploadMediaAsset(input: {
   familyId: string
   childId: string
 }): Promise<{ fileId: string; fileType: 'image' | 'video'; mediaId?: string }> {
+  assertFamilyAccess(input.familyId, input.childId, true)
   const chosen = await Taro.chooseMedia({
     count: 1,
     mediaType: ['image', 'video'],
@@ -95,6 +98,7 @@ export async function uploadGrowthMedia(
   input: { familyId: string; childId: string },
   file: GrowthMediaFile,
 ): Promise<string> {
+  assertFamilyAccess(input.familyId, input.childId, true)
   if (!isCloudConfigured()) {
     const savedFilePath = await new Promise<string>((resolve, reject) =>
       Taro.getFileSystemManager().saveFile({

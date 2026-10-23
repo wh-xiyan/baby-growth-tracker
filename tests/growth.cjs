@@ -421,6 +421,7 @@ async function main() {
         familyId: 'f',
         childId: 'c',
         currentRole: 'adult',
+        children: [{ id: 'c', familyId: 'f' }],
         user: { nickname: '妈妈' },
       })
       const r = {

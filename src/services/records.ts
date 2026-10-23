@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { assertFamilyAccess } from './permissions'
 import { localDate } from '../utils/home'
 import { validRange } from '../utils/care-records'
 import { useSessionStore } from '../stores/session'
@@ -46,6 +47,7 @@ export interface DailyRecord extends CreateRecordInput {
 }
 
 export async function createRecord(input: CreateRecordInput): Promise<{ id: string }> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? input.childId : undefined, true)
   if (isCloudConfigured()) {
     const created = await callCloudFunction<{ id: string }>(
       'createRecord',
@@ -79,6 +81,7 @@ export async function listDailyRecords(input: {
   endDate?: string
   category?: RecordCategory
 }): Promise<DailyRecord[]> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? input.childId : undefined)
   const startDate = input.startDate || input.date || localDate()
   const endDate = input.endDate || input.date || startDate
   if (!validRange(startDate, endDate)) throw new Error('INVALID_DAILY_RECORD_QUERY')
@@ -113,6 +116,7 @@ export async function listRecords(input: {
   limit?: number
   skip?: number
 }): Promise<DailyRecord[]> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? input.childId : undefined)
   if (isCloudConfigured()) return callCloudFunction<DailyRecord[]>('listRecords', input)
   return ((Taro.getStorageSync(DEMO_KEY) || []) as DailyRecord[])
     .filter(
@@ -130,6 +134,7 @@ export async function getRecord(input: {
   childId: string
   recordId: string
 }): Promise<DailyRecord> {
+  assertFamilyAccess(input.familyId, 'childId' in input ? input.childId : undefined)
   if (isCloudConfigured()) return callCloudFunction<DailyRecord>('getRecord', input)
   const record = ((Taro.getStorageSync(DEMO_KEY) || []) as DailyRecord[]).find(
     (item) =>

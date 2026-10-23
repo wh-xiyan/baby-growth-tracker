@@ -41,7 +41,7 @@ export function GrowthRecordEditor() {
     { familyId, childId, userId, children, currentRole, initialized } = useSessionStore()
   const child = children.find((c) => c.id === childId),
     now = new Date().toISOString(),
-    canAdd = currentRole === 'owner' || currentRole === 'adult'
+    canAdd = currentRole === 'owner' || currentRole === 'admin' || currentRole === 'adult'
   const initialCategory: Category =
     params.category === 'study'
       ? 'study'
